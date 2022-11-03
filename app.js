@@ -2,12 +2,18 @@ require('dotenv').config();
 const express = require('express');
 const logger = require('morgan');
 const createError = require('http-errors');
+const pool = require('./dbConfig');
+const routes = require('./routes/index');
 
 const app = express();
+
+pool.connect();
 
 app.use(logger('dev'));
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
+
+app.use('/', routes);
 
 app.use((req, res, next) => {
   next(createError(404));
