@@ -7,9 +7,9 @@ CREATE TABLE accounts (
   username VARCHAR(20) UNIQUE NOT NULL,
   hashedPassword VARCHAR(255) NOT NULL,
   first_name VARCHAR(50),
-  last_name VARCHAR(50),
+  last_name VARCHAR(100),
   email VARCHAR(255) UNIQUE NOT NULL,
-  created_on TIMESTAMP NOT NULL
+  created_on TIMESTAMP NOT NULL DEFAULT NOW()
 );
 
 CREATE TABLE roles (
