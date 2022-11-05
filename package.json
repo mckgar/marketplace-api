@@ -5,8 +5,7 @@
   "scripts": {
     "start": "NODE_ENV=production node ./bin/www",
     "devStart": "NODE_ENV=development DEBUG=marketplace-api:* nodemon ./bin/www",
-    "test": "NODE_ENV=testing jest",
-    "testDetect": "NODE_ENV=testing jest --detectOpenHandles"
+    "test": "NODE_ENV=development jest"
   },
   "dependencies": {
     "bcryptjs": "^2.4.3",
