@@ -1,7 +1,6 @@
 const express = require('express');
 const { body, validationResult } = require('express-validator');
 const bcrypt = require('bcryptjs');
-const jwt = require('jsonwebtoken');
 
 const accountRoute = (database) => {
   const router = express.Router();
@@ -61,11 +60,7 @@ const accountRoute = (database) => {
       try {
         const hashedPassword = await bcrypt.hash(req.body.password, 10);
         const user = await database.createAccount(req.body.username, hashedPassword, req.body.email);
-        const payload = {
-          account_id: user
-        };
-        const opts = { expiresIn: 600 };
-        const token = jwt.sign(payload, process.env.JWT_SECRET, opts);
+        const token = require('../issueToken')(user);
         res.status(201).json(
           {
             token
