@@ -10,30 +10,6 @@ const pool = new Pool(
   }
 );
 
-exports.findAccountByUsername = async (username) => {
-  try {
-    const search = await pool.query(
-      'SELECT * FROM accounts WHERE username = $1 LIMIT 1',
-      [username]
-    );
-    return search.rows[0];
-  } catch (err) {
-    return err;
-  }
-};
-
-exports.findAccountByEmail = async (email) => {
-  try {
-    const search = await pool.query(
-      'SELECT * FROM accounts WHERE email = $1 LIMIT 1',
-      [email]
-    );
-    return search.rows[0];
-  } catch (err) {
-    return err;
-  }
-};
-
 exports.createAccount = async (username, hashedPassword, email) => {
   try {
     const newUser = await pool.query(
@@ -41,6 +17,30 @@ exports.createAccount = async (username, hashedPassword, email) => {
       [username, hashedPassword, email]
     );
     return newUser.account_id;
+  } catch (err) {
+    return err;
+  }
+};
+
+exports.findAccountByUsername = async username => {
+  try {
+    const user = await pool.query(
+      'SELECT * FROM accounts WHERE username = $1 LIMIT 1',
+      [username]
+    );
+    return user.rows[0];
+  } catch (err) {
+    return err;
+  }
+};
+
+exports.findAccountByEmail = async email => {
+  try {
+    const user = await pool.query(
+      'SELECT * FROM accounts WHERE email = $1 LIMIT 1',
+      [email]
+    );
+    return user.rows[0];
   } catch (err) {
     return err;
   }
