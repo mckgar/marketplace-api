@@ -45,3 +45,59 @@ exports.findAccountByEmail = async email => {
     return err;
   }
 };
+
+exports.findAccountById = async accountId => {
+  try {
+    const user = await pool.query(
+      'SELECT * FROM accounts WHERE account_id = $1 LIMIT 1',
+      [accountId]
+    );
+    return user.rows[0];
+  } catch (err) {
+    return err;
+  }
+};
+
+exports.updateFirstName = async (accountId, firstName) => {
+  try {
+    await pool.query(
+      'UPDATE accounts SET first_name = $1 WHERE account_id = $2',
+      [firstName, accountId]
+    );
+  } catch (err) {
+    return err;
+  }
+};
+
+exports.updateLastName = async (accountId, lastName) => {
+  try {
+    await pool.query(
+      'UPDATE accounts SET last_name = $1 WHERE account_id = $2',
+      [lastName, accountId]
+    );
+  } catch (err) {
+    return err;
+  }
+};
+
+exports.updateEmail = async (accountId, newEmail) => {
+  try {
+    await pool.query(
+      'UPDATE accounts SET email = $1 WHERE account_id = $2',
+      [newEmail, accountId]
+    );
+  } catch (err) {
+    return err;
+  }
+};
+
+exports.updatePassword = async (accountId, newHashedPassword) => {
+  try {
+    await pool.query(
+      'UPDATE accounts SET hashedPassword = $1 WHERE account_id = $2',
+      [newHashedPassword, accountId]
+    );
+  } catch (err) {
+    return err;
+  }
+};
