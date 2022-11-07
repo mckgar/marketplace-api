@@ -1,9 +1,11 @@
 const express = require('express');
-const { body, validationResult } = require('express-validator');
+const { body, param, validationResult } = require('express-validator');
 const bcrypt = require('bcryptjs');
+const passport = require('passport');
 
-const accountRoute = (database) => {
+const accountRoute = database => {
   const router = express.Router();
+  require('../passport')(database);
 
   router.post('/', [
     body('username')
@@ -66,6 +68,80 @@ const accountRoute = (database) => {
             token
           }
         );
+        return;
+      } catch (err) {
+        next(err);
+      }
+    }
+  ]);
+
+  router.put('/:username', [
+    passport.authenticate('jwt', { session: false }),
+    param('username')
+      .trim()
+      .escape(),
+    body('first_name')
+      .optional()
+      .trim()
+      .escape()
+      .isLength({ min: 1 }).withMessage('first_name cannot be empty')
+      .isLength({ max: 50 }).withMessage('first_name cannot exceed 50 characters'),
+    body('last_name')
+      .optional()
+      .trim()
+      .escape()
+      .isLength({ min: 1 }).withMessage('last_name cannot be empty')
+      .isLength({ max: 100 }).withMessage('last_name cannot exceed 100 characters'),
+    body('email')
+      .optional()
+      .trim()
+      .escape()
+      .isEmail(),
+    body('new_password')
+      .optional()
+      .trim()
+      .isStrongPassword({
+        minLength: 8,
+        minLowercase: 1,
+        minUppercase: 1,
+        minNumbers: 1,
+        returnScore: false
+      })
+      .escape(),
+    async (req, res, next) => {
+      if (req.user.username !== req.params.username) {
+        res.sendStatus(403);
+        return;
+      }
+      const errors = validationResult(req);
+      if (!errors.isEmpty()) {
+        res.status(400).json({
+          errors: errors.array()
+        });
+        return;
+      }
+      if (!req.body.first_name && !req.body.last_name
+        && !req.body.email && !req.body.new_password) {
+        res.status(400).json({
+          errors: 'No info has been given to update'
+        });
+        return;
+      }
+      try {
+        if (req.body.first_name) {
+          await database.updateFirstName(req.user.username, req.body.first_name);
+        }
+        if (req.body.last_name) {
+          await database.updateLastName(req.user.username, req.body.last_name);
+        }
+        if (req.body.email) {
+          await database.updateEmail(req.user.username, req.body.email);
+        }
+        if (req.body.new_password) {
+          const hashedPassword = await bcrypt.hash(req.body.new_password, 10);
+          await database.updatePassword(req.user.username, hashedPassword);
+        }
+        res.sendStatus(200);
         return;
       } catch (err) {
         next(err);

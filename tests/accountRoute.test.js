@@ -5,12 +5,24 @@ const jwt = require('jsonwebtoken');
 const findAccountByUsername = jest.fn();
 const findAccountByEmail = jest.fn();
 const createAccount = jest.fn();
+const findAccountById = jest.fn();
+const updateFirstName = jest.fn();
+const updateLastName = jest.fn();
+const updateEmail = jest.fn();
+const updatePassword = jest.fn();
 
 const app = require('../app')({
   findAccountByUsername,
   findAccountByEmail,
-  createAccount
+  createAccount,
+  findAccountById,
+  updateFirstName,
+  updateLastName,
+  updateEmail,
+  updatePassword
 });
+
+const cred = require('../issueToken')(1);
 
 describe('POST /account', () => {
   describe('Given valid registration data', () => {
@@ -272,3 +284,640 @@ describe('POST /account', () => {
     });
   });
 });
+
+describe('PUT /account/:username', () => {
+  describe('Given valid credentials', () => {
+    describe('Updating first_name', () => {
+      describe('Given valid info', () => {
+        const data = [
+          { username: 'editor1', body: { first_name: 'name1' } },
+          { username: 'editor2', body: { first_name: 'name2' } },
+          { username: 'editor3', body: { first_name: 'name3' } },
+        ];
+
+        test('Responds with 200 status code', async () => {
+          for (const input of data) {
+            findAccountById.mockResolvedValue({
+              account_id: 1,
+              username: input.username,
+              email: 'editor@email.com',
+              first_name: null,
+              last_name: null
+            });
+            const response = await request(app)
+              .put(`/account/${input.username}`)
+              .send(input.body)
+              .set('Authorization', `Bearer ${cred}`);
+            expect(response.statusCode).toBe(200);
+          }
+        });
+
+        test('Update is made on correct account', async () => {
+          for (const input of data) {
+            findAccountById.mockResolvedValue({
+              account_id: 1,
+              username: input.username,
+              email: 'editor@email.com',
+              first_name: null,
+              last_name: null
+            });
+            updateFirstName.mockReset();
+            await request(app)
+              .put(`/account/${input.username}`)
+              .send(input.body)
+              .set('Authorization', `Bearer ${cred}`);
+            expect(updateFirstName.mock.calls.length).toBe(1);
+            expect(updateFirstName.mock.calls[0][0]).toBe(input.username);
+          }
+        });
+
+        test('first_name is updated', async () => {
+          for (const input of data) {
+            findAccountById.mockResolvedValue({
+              account_id: 1,
+              username: input.username,
+              email: 'editor@email.com',
+              first_name: null,
+              last_name: null
+            });
+            updateFirstName.mockReset();
+            await request(app)
+              .put(`/account/${input.username}`)
+              .send(input.body)
+              .set('Authorization', `Bearer ${cred}`);
+            expect(updateFirstName.mock.calls.length).toBe(1);
+            expect(updateFirstName.mock.calls[0][1]).toBe(input.body.first_name);
+          }
+        });
+      });
+
+      describe('Given invalid info', () => {
+        const data = [
+          { username: 'editor1', body: { first_name: null } },
+          { username: 'editor2', body: { first_name: 'thisnameiswaytoolongImeanjustlookatitwhonamestheirkidsomethinglikethiswaytoometa' } },
+          // I want to restrict it to only letters, but there is probably 
+          // someone whose legal name has other symbols or numbers
+        ];
+
+        test('Responds with 400 status code', async () => {
+          for (const input of data) {
+            findAccountById.mockResolvedValue({
+              account_id: 1,
+              username: input.username,
+              email: 'editor@email.com',
+              first_name: null,
+              last_name: null
+            });
+            const response = await request(app)
+              .put(`/account/${input.username}`)
+              .send(input.body)
+              .set('Authorization', `Bearer ${cred}`);
+            expect(response.statusCode).toBe(400);
+          }
+        });
+
+        test('Responds with json in content-type header', async () => {
+          for (const input of data) {
+            findAccountById.mockResolvedValue({
+              account_id: 1,
+              username: input.username,
+              email: 'editor@email.com',
+              first_name: null,
+              last_name: null
+            });
+            const response = await request(app)
+              .put(`/account/${input.username}`)
+              .send(input.body)
+              .set('Authorization', `Bearer ${cred}`);
+            expect(response.headers['content-type'])
+              .toEqual(expect.stringContaining('json'));
+          }
+        });
+
+        test('Responds with errors in json object', async () => {
+          for (const input of data) {
+            findAccountById.mockResolvedValue({
+              account_id: 1,
+              username: input.username,
+              email: 'editor@email.com',
+              first_name: null,
+              last_name: null
+            });
+            const response = await request(app)
+              .put(`/account/${input.username}`)
+              .send(input.body)
+              .set('Authorization', `Bearer ${cred}`);
+            expect(response.body.errors).toBeDefined();
+          }
+        });
+
+        test('Error message is for only for first_name', async () => {
+          for (const input of data) {
+            findAccountById.mockResolvedValue({
+              account_id: 1,
+              username: input.username,
+              email: 'editor@email.com',
+              first_name: null,
+              last_name: null
+            });
+            const response = await request(app)
+              .put(`/account/${input.username}`)
+              .send(input.body)
+              .set('Authorization', `Bearer ${cred}`);
+            expect(response.body.errors.length).toBe(1);
+            expect(response.body.errors[0].param).toBe('first_name');
+          }
+        });
+      });
+    });
+
+    describe('Updating last_name', () => {
+      describe('Given valid info', () => {
+        const data = [
+          { username: 'editor1', body: { last_name: 'lastname1' } },
+          { username: 'editor2', body: { last_name: 'lastname2' } },
+          { username: 'editor3', body: { last_name: 'lastname3' } }
+        ];
+
+        test('Responds with 200 status code', async () => {
+          for (const input of data) {
+            findAccountById.mockResolvedValue({
+              account_id: 1,
+              username: input.username,
+              email: 'editor@email.com',
+              first_name: null,
+              last_name: null
+            });
+            const response = await request(app)
+              .put(`/account/${input.username}`)
+              .send(input.body)
+              .set('Authorization', `Bearer ${cred}`);
+            expect(response.statusCode).toBe(200);
+          }
+        });
+
+        test('Update is made on correct account', async () => {
+          for (const input of data) {
+            findAccountById.mockResolvedValue({
+              account_id: 1,
+              username: input.username,
+              email: 'editor@email.com',
+              first_name: null,
+              last_name: null
+            });
+            updateLastName.mockReset();
+            await request(app)
+              .put(`/account/${input.username}`)
+              .send(input.body)
+              .set('Authorization', `Bearer ${cred}`);
+            expect(updateLastName.mock.calls.length).toBe(1);
+            expect(updateLastName.mock.calls[0][0]).toBe(input.username);
+          }
+        });
+
+        test('last_name is updated', async () => {
+          for (const input of data) {
+            findAccountById.mockResolvedValue({
+              account_id: 1,
+              username: input.username,
+              email: 'editor@email.com',
+              first_name: null,
+              last_name: null
+            });
+            updateLastName.mockReset();
+            await request(app)
+              .put(`/account/${input.username}`)
+              .send(input.body)
+              .set('Authorization', `Bearer ${cred}`);
+            expect(updateLastName.mock.calls.length).toBe(1);
+            expect(updateLastName.mock.calls[0][1]).toBe(input.body.last_name);
+          }
+        });
+      });
+
+      describe('Given invalid info', () => {
+        const data = [
+          { username: 'editor1', body: { last_name: null } },
+          { username: 'editor2', body: { last_name: '' } },
+          { username: 'editor3', body: { last_name: 'thisnameiswaytoolongImeanjustlookatitwhonamestheirkidsomethinglikethiswaytoometaandwaytoolongimaginehavingtospellyourfullnameoneveryassignmentinschooljeezthisisrough' } },
+          // I want to restrict it to only letters, but there is probably 
+          // someone whose legal surname has other symbols (like !@#$) or numbers
+        ];
+
+        test('Responds with 400 status code', async () => {
+          for (const input of data) {
+            findAccountById.mockResolvedValue({
+              account_id: 1,
+              username: input.username,
+              email: 'editor@email.com',
+              first_name: null,
+              last_name: null
+            });
+            const response = await request(app)
+              .put(`/account/${input.username}`)
+              .send(input.body)
+              .set('Authorization', `Bearer ${cred}`);
+            expect(response.statusCode).toBe(400);
+          }
+        });
+
+        test('Responds with json in content-type header', async () => {
+          for (const input of data) {
+            findAccountById.mockResolvedValue({
+              account_id: 1,
+              username: input.username,
+              email: 'editor@email.com',
+              first_name: null,
+              last_name: null
+            });
+            const response = await request(app)
+              .put(`/account/${input.username}`)
+              .send(input.body)
+              .set('Authorization', `Bearer ${cred}`);
+            expect(response.headers['content-type'])
+              .toEqual(expect.stringContaining('json'));
+          }
+        });
+
+        test('Responds with errors in json object', async () => {
+          for (const input of data) {
+            findAccountById.mockResolvedValue({
+              account_id: 1,
+              username: input.username,
+              email: 'editor@email.com',
+              first_name: null,
+              last_name: null
+            });
+            const response = await request(app)
+              .put(`/account/${input.username}`)
+              .send(input.body)
+              .set('Authorization', `Bearer ${cred}`);
+            expect(response.body.errors).toBeDefined();
+          }
+        });
+
+        test('Error message is for only for last_name', async () => {
+          for (const input of data) {
+            findAccountById.mockResolvedValue({
+              account_id: 1,
+              username: input.username,
+              email: 'editor@email.com',
+              first_name: null,
+              last_name: null
+            });
+            const response = await request(app)
+              .put(`/account/${input.username}`)
+              .send(input.body)
+              .set('Authorization', `Bearer ${cred}`);
+            expect(response.body.errors.length).toBe(1);
+            expect(response.body.errors[0].param).toBe('last_name');
+          }
+        });
+      });
+    });
+
+    describe('Updating email', () => {
+      describe('Given valid info', () => {
+        const data = [
+          { username: 'editor1', body: { email: 'newMail@new.com' } },
+          { username: 'editor2', body: { email: 'newMail2@newer.com' } }
+        ];
+
+        test('Responds with 200 status code', async () => {
+          for (const input of data) {
+            findAccountById.mockResolvedValue({
+              account_id: 1,
+              username: input.username,
+              email: 'editor@email.com',
+              first_name: null,
+              last_name: null
+            });
+            const response = await request(app)
+              .put(`/account/${input.username}`)
+              .send(input.body)
+              .set('Authorization', `Bearer ${cred}`);
+            expect(response.statusCode).toBe(200);
+          }
+        });
+
+        test('Update is made on correct account', async () => {
+          for (const input of data) {
+            findAccountById.mockResolvedValue({
+              account_id: 1,
+              username: input.username,
+              email: 'editor@email.com',
+              first_name: null,
+              last_name: null
+            });
+            updateEmail.mockReset();
+            await request(app)
+              .put(`/account/${input.username}`)
+              .send(input.body)
+              .set('Authorization', `Bearer ${cred}`);
+            expect(updateEmail.mock.calls.length).toBe(1);
+            expect(updateEmail.mock.calls[0][0]).toBe(input.username);
+          }
+        });
+
+        test('email is updated', async () => {
+          for (const input of data) {
+            findAccountById.mockResolvedValue({
+              account_id: 1,
+              username: input.username,
+              email: 'editor@email.com',
+              first_name: null,
+              last_name: null
+            });
+            updateEmail.mockReset();
+            await request(app)
+              .put(`/account/${input.username}`)
+              .send(input.body)
+              .set('Authorization', `Bearer ${cred}`);
+            expect(updateEmail.mock.calls.length).toBe(1);
+            expect(updateEmail.mock.calls[0][1]).toBe(input.body.email);
+          }
+        });
+      });
+
+      describe('Given invalid info', () => {
+        const data = [
+          { username: 'editor1', body: { email: null } },
+          { username: 'editor2', body: { email: '' } },
+          { username: 'editor3', body: { email: 'word' } },
+          { username: 'editor4', body: { email: '@' } },
+          { username: 'editor5', body: { email: 'front@' } },
+          { username: 'editor6', body: { email: '@back' } },
+        ];
+
+        test('Responds with 400 status code', async () => {
+          for (const input of data) {
+            findAccountById.mockResolvedValue({
+              account_id: 1,
+              username: input.username,
+              email: 'editor@email.com',
+              first_name: null,
+              last_name: null
+            });
+            const response = await request(app)
+              .put(`/account/${input.username}`)
+              .send(input.body)
+              .set('Authorization', `Bearer ${cred}`);
+            expect(response.statusCode).toBe(400);
+          }
+        });
+
+        test('Responds with json in content-type header', async () => {
+          for (const input of data) {
+            findAccountById.mockResolvedValue({
+              account_id: 1,
+              username: input.username,
+              email: 'editor@email.com',
+              first_name: null,
+              last_name: null
+            });
+            const response = await request(app)
+              .put(`/account/${input.username}`)
+              .send(input.body)
+              .set('Authorization', `Bearer ${cred}`);
+            expect(response.headers['content-type'])
+              .toEqual(expect.stringContaining('json'));
+          }
+        });
+
+        test('Responds with errors in json object', async () => {
+          for (const input of data) {
+            findAccountById.mockResolvedValue({
+              account_id: 1,
+              username: input.username,
+              email: 'editor@email.com',
+              first_name: null,
+              last_name: null
+            });
+            const response = await request(app)
+              .put(`/account/${input.username}`)
+              .send(input.body)
+              .set('Authorization', `Bearer ${cred}`);
+            expect(response.body.errors).toBeDefined();
+          }
+        });
+
+        test('Error message is for only for email', async () => {
+          for (const input of data) {
+            findAccountById.mockResolvedValue({
+              account_id: 1,
+              username: input.username,
+              email: 'editor@email.com',
+              first_name: null,
+              last_name: null
+            });
+            const response = await request(app)
+              .put(`/account/${input.username}`)
+              .send(input.body)
+              .set('Authorization', `Bearer ${cred}`);
+            expect(response.body.errors.length).toBe(1);
+            expect(response.body.errors[0].param).toBe('email');
+          }
+        });
+      });
+    });
+
+    describe('Updating password', () => {
+      describe('Given valid info', () => {
+        const data = [
+          { username: 'editor1', body: { new_password: 'BrandNew1$' } },
+          { username: 'editor2', body: { new_password: 'BrandNew1$' } }
+        ];
+
+        test('Responds with 200 status code', async () => {
+          for (const input of data) {
+            findAccountById.mockResolvedValue({
+              account_id: 1,
+              username: input.username,
+              email: 'editor@email.com',
+              first_name: null,
+              last_name: null
+            });
+            const response = await request(app)
+              .put(`/account/${input.username}`)
+              .send(input.body)
+              .set('Authorization', `Bearer ${cred}`);
+            expect(response.statusCode).toBe(200);
+          }
+        });
+
+        test('Update is made on correct account', async () => {
+          for (const input of data) {
+            findAccountById.mockResolvedValue({
+              account_id: 1,
+              username: input.username,
+              email: 'editor@email.com',
+              first_name: null,
+              last_name: null
+            });
+            updatePassword.mockReset();
+            await request(app)
+              .put(`/account/${input.username}`)
+              .send(input.body)
+              .set('Authorization', `Bearer ${cred}`);
+            expect(updatePassword.mock.calls.length).toBe(1);
+            expect(updatePassword.mock.calls[0][0]).toBe(input.username);
+          }
+        });
+
+        test('Password is updated', async () => {
+          for (const input of data) {
+            findAccountById.mockResolvedValue({
+              account_id: 1,
+              username: input.username,
+              email: 'editor@email.com',
+              first_name: null,
+              last_name: null
+            });
+            updatePassword.mockReset();
+            await request(app)
+              .put(`/account/${input.username}`)
+              .send(input.body)
+              .set('Authorization', `Bearer ${cred}`);
+            expect(updatePassword.mock.calls.length).toBe(1);
+            expect(await bcrypt.compare(
+              input.body.new_password,
+              updatePassword.mock.calls[0][1]
+            )).toBeTruthy();
+          }
+        });
+      });
+
+      describe('Given invalid info', () => {
+        const data = [
+          { username: 'editor1', body: { new_password: null } },
+          { username: 'editor2', body: { new_password: '' } },
+          { username: 'editor3', body: { new_password: 'short1$' } },
+          { username: 'editor4', body: { new_password: 'nonumbershere' } },
+          { username: 'editor5', body: { new_password: '0123456789' } },
+          { username: 'editor6', body: { new_password: '!@#$%^&*' } },
+          { username: 'editor7', body: { new_password: '0123!@#$%^&*' } },
+          { username: 'editor8', body: { new_password: 'asdf!@#$%^&*' } },
+          { username: 'editor8', body: { new_password: 'asdf01234' } },
+        ];
+
+        test('Responds with 400 status code', async () => {
+          for (const input of data) {
+            findAccountById.mockResolvedValue({
+              account_id: 1,
+              username: input.username,
+              email: 'editor@email.com',
+              first_name: null,
+              last_name: null
+            });
+            const response = await request(app)
+              .put(`/account/${input.username}`)
+              .send(input.body)
+              .set('Authorization', `Bearer ${cred}`);
+            expect(response.statusCode).toBe(400);
+          }
+        });
+
+        test('Responds with json in content-type header', async () => {
+          for (const input of data) {
+            findAccountById.mockResolvedValue({
+              account_id: 1,
+              username: input.username,
+              email: 'editor@email.com',
+              first_name: null,
+              last_name: null
+            });
+            const response = await request(app)
+              .put(`/account/${input.username}`)
+              .send(input.body)
+              .set('Authorization', `Bearer ${cred}`);
+            expect(response.headers['content-type'])
+              .toEqual(expect.stringContaining('json'));
+          }
+        });
+
+        test('Responds with errors in json object', async () => {
+          for (const input of data) {
+            findAccountById.mockResolvedValue({
+              account_id: 1,
+              username: input.username,
+              email: 'editor@email.com',
+              first_name: null,
+              last_name: null
+            });
+            const response = await request(app)
+              .put(`/account/${input.username}`)
+              .send(input.body)
+              .set('Authorization', `Bearer ${cred}`);
+            expect(response.body.errors).toBeDefined();
+          }
+        });
+
+        test('Error message is for only for new_password', async () => {
+          for (const input of data) {
+            findAccountById.mockResolvedValue({
+              account_id: 1,
+              username: input.username,
+              email: 'editor@email.com',
+              first_name: null,
+              last_name: null
+            });
+            const response = await request(app)
+              .put(`/account/${input.username}`)
+              .send(input.body)
+              .set('Authorization', `Bearer ${cred}`);
+            expect(response.body.errors.length).toBe(1);
+            expect(response.body.errors[0].param).toBe('new_password');
+          }
+        });
+      });
+    });
+  });
+
+  describe('Given invalid credentials', () => {
+    const data = [
+      { username: 'editor1', body: { first_name: 'wrong_name' } },
+      { username: 'editor2', body: { last_name: 'wrong_name' } },
+      { username: 'editor3', body: { email: 'wrong@email.com' } },
+    ];
+
+    test('Responds with 403 status code', async () => {
+      findAccountById.mockResolvedValue({
+        account_id: 1,
+        username: 'wrongaccount',
+        email: 'wrong@email.com',
+        first_name: null,
+        last_name: null
+      });
+      for (const input of data) {
+        const response = await request(app)
+          .put(`/account/${input.username}`)
+          .send(input.body)
+          .set('Authorization', `Bearer ${cred}`);
+        expect(response.statusCode).toBe(403);
+      }
+    });
+  });
+
+  describe('Given no credentials', () => {
+    const data = [
+      { username: 'editor1', body: { first_name: 'wrong_name' } },
+      { username: 'editor2', body: { last_name: 'wrong_name' } },
+      { username: 'editor3', body: { email: 'wrong@email.com' } },
+    ];
+
+    test('Responds with 403 status code', async () => {
+      findAccountById.mockResolvedValue(null);
+      for (const input of data) {
+        const response = await request(app)
+          .put(`/account/${input.username}`)
+          .send(input.body);
+        expect(response.statusCode).toBe(401);
+      }
+    });
+  });
+
+  // Case where user does not exist is equivalent to having the wrong (or no) credentials
+});
+
+//GET /account
+//DELETE /account
