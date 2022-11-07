@@ -290,15 +290,15 @@ describe('PUT /account/:username', () => {
     describe('Updating first_name', () => {
       describe('Given valid info', () => {
         const data = [
-          { username: 'editor1', body: { first_name: 'name1' } },
-          { username: 'editor2', body: { first_name: 'name2' } },
-          { username: 'editor3', body: { first_name: 'name3' } },
+          { account_id: 1, username: 'editor1', body: { first_name: 'name1' } },
+          { account_id: 2, username: 'editor2', body: { first_name: 'name2' } },
+          { account_id: 3, username: 'editor3', body: { first_name: 'name3' } },
         ];
 
         test('Responds with 200 status code', async () => {
           for (const input of data) {
             findAccountById.mockResolvedValue({
-              account_id: 1,
+              account_id: input.account_id,
               username: input.username,
               email: 'editor@email.com',
               first_name: null,
@@ -315,7 +315,7 @@ describe('PUT /account/:username', () => {
         test('Update is made on correct account', async () => {
           for (const input of data) {
             findAccountById.mockResolvedValue({
-              account_id: 1,
+              account_id: input.account_id,
               username: input.username,
               email: 'editor@email.com',
               first_name: null,
@@ -327,14 +327,14 @@ describe('PUT /account/:username', () => {
               .send(input.body)
               .set('Authorization', `Bearer ${cred}`);
             expect(updateFirstName.mock.calls.length).toBe(1);
-            expect(updateFirstName.mock.calls[0][0]).toBe(input.username);
+            expect(updateFirstName.mock.calls[0][0]).toBe(input.account_id);
           }
         });
 
         test('first_name is updated', async () => {
           for (const input of data) {
             findAccountById.mockResolvedValue({
-              account_id: 1,
+              account_id: input.account_id,
               username: input.username,
               email: 'editor@email.com',
               first_name: null,
@@ -434,15 +434,15 @@ describe('PUT /account/:username', () => {
     describe('Updating last_name', () => {
       describe('Given valid info', () => {
         const data = [
-          { username: 'editor1', body: { last_name: 'lastname1' } },
-          { username: 'editor2', body: { last_name: 'lastname2' } },
-          { username: 'editor3', body: { last_name: 'lastname3' } }
+          { account_id: 1, username: 'editor1', body: { last_name: 'lastname1' } },
+          { account_id: 2, username: 'editor2', body: { last_name: 'lastname2' } },
+          { account_id: 3, username: 'editor3', body: { last_name: 'lastname3' } }
         ];
 
         test('Responds with 200 status code', async () => {
           for (const input of data) {
             findAccountById.mockResolvedValue({
-              account_id: 1,
+              account_id: input.account_id,
               username: input.username,
               email: 'editor@email.com',
               first_name: null,
@@ -459,7 +459,7 @@ describe('PUT /account/:username', () => {
         test('Update is made on correct account', async () => {
           for (const input of data) {
             findAccountById.mockResolvedValue({
-              account_id: 1,
+              account_id: input.account_id,
               username: input.username,
               email: 'editor@email.com',
               first_name: null,
@@ -471,14 +471,14 @@ describe('PUT /account/:username', () => {
               .send(input.body)
               .set('Authorization', `Bearer ${cred}`);
             expect(updateLastName.mock.calls.length).toBe(1);
-            expect(updateLastName.mock.calls[0][0]).toBe(input.username);
+            expect(updateLastName.mock.calls[0][0]).toBe(input.account_id);
           }
         });
 
         test('last_name is updated', async () => {
           for (const input of data) {
             findAccountById.mockResolvedValue({
-              account_id: 1,
+              account_id: input.account_id,
               username: input.username,
               email: 'editor@email.com',
               first_name: null,
@@ -579,14 +579,14 @@ describe('PUT /account/:username', () => {
     describe('Updating email', () => {
       describe('Given valid info', () => {
         const data = [
-          { username: 'editor1', body: { email: 'newMail@new.com' } },
-          { username: 'editor2', body: { email: 'newMail2@newer.com' } }
+          { account_id: 1, username: 'editor1', body: { email: 'newMail@new.com' } },
+          { account_id: 2, username: 'editor2', body: { email: 'newMail2@newer.com' } }
         ];
 
         test('Responds with 200 status code', async () => {
           for (const input of data) {
             findAccountById.mockResolvedValue({
-              account_id: 1,
+              account_id: input.account_id,
               username: input.username,
               email: 'editor@email.com',
               first_name: null,
@@ -603,7 +603,7 @@ describe('PUT /account/:username', () => {
         test('Update is made on correct account', async () => {
           for (const input of data) {
             findAccountById.mockResolvedValue({
-              account_id: 1,
+              account_id: input.account_id,
               username: input.username,
               email: 'editor@email.com',
               first_name: null,
@@ -615,14 +615,14 @@ describe('PUT /account/:username', () => {
               .send(input.body)
               .set('Authorization', `Bearer ${cred}`);
             expect(updateEmail.mock.calls.length).toBe(1);
-            expect(updateEmail.mock.calls[0][0]).toBe(input.username);
+            expect(updateEmail.mock.calls[0][0]).toBe(input.account_id);
           }
         });
 
         test('email is updated', async () => {
           for (const input of data) {
             findAccountById.mockResolvedValue({
-              account_id: 1,
+              account_id: input.account_id,
               username: input.username,
               email: 'editor@email.com',
               first_name: null,
@@ -724,14 +724,14 @@ describe('PUT /account/:username', () => {
     describe('Updating password', () => {
       describe('Given valid info', () => {
         const data = [
-          { username: 'editor1', body: { new_password: 'BrandNew1$' } },
-          { username: 'editor2', body: { new_password: 'BrandNew1$' } }
+          { account_id: 1, username: 'editor1', body: { new_password: 'BrandNew1$' } },
+          { account_id: 2, username: 'editor2', body: { new_password: 'BrandNew1$' } }
         ];
 
         test('Responds with 200 status code', async () => {
           for (const input of data) {
             findAccountById.mockResolvedValue({
-              account_id: 1,
+              account_id: input.account_id,
               username: input.username,
               email: 'editor@email.com',
               first_name: null,
@@ -748,7 +748,7 @@ describe('PUT /account/:username', () => {
         test('Update is made on correct account', async () => {
           for (const input of data) {
             findAccountById.mockResolvedValue({
-              account_id: 1,
+              account_id: input.account_id,
               username: input.username,
               email: 'editor@email.com',
               first_name: null,
@@ -760,14 +760,14 @@ describe('PUT /account/:username', () => {
               .send(input.body)
               .set('Authorization', `Bearer ${cred}`);
             expect(updatePassword.mock.calls.length).toBe(1);
-            expect(updatePassword.mock.calls[0][0]).toBe(input.username);
+            expect(updatePassword.mock.calls[0][0]).toBe(input.account_id);
           }
         });
 
         test('Password is updated', async () => {
           for (const input of data) {
             findAccountById.mockResolvedValue({
-              account_id: 1,
+              account_id: input.account_id,
               username: input.username,
               email: 'editor@email.com',
               first_name: null,

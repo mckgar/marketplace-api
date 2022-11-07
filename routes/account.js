@@ -129,17 +129,17 @@ const accountRoute = database => {
       }
       try {
         if (req.body.first_name) {
-          await database.updateFirstName(req.user.username, req.body.first_name);
+          await database.updateFirstName(req.user.account_id, req.body.first_name);
         }
         if (req.body.last_name) {
-          await database.updateLastName(req.user.username, req.body.last_name);
+          await database.updateLastName(req.user.account_id, req.body.last_name);
         }
         if (req.body.email) {
-          await database.updateEmail(req.user.username, req.body.email);
+          await database.updateEmail(req.user.account_id, req.body.email);
         }
         if (req.body.new_password) {
           const hashedPassword = await bcrypt.hash(req.body.new_password, 10);
-          await database.updatePassword(req.user.username, hashedPassword);
+          await database.updatePassword(req.user.account_id, hashedPassword);
         }
         res.sendStatus(200);
         return;
