@@ -25,7 +25,7 @@ const loginRoute = database => {
           user = await database.findAccountByEmail(req.body.email);
         }
         if (user) {
-          const valid = await bcrypt.compare(req.body.password, user.hashedPassword);
+          const valid = await bcrypt.compare(req.body.password, user.hashedpassword);
           if (valid) {
             const token = require('../issueToken')(user.account_id);
             res.status(200).json({
