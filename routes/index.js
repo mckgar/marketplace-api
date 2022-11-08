@@ -7,6 +7,8 @@ const routes = (database) => {
   router.use('/account', require('./account')(database));
   router.use('/login', require('./login')(database));
 
+  router.use('/item', require('./item')(database));
+
   return router;
 };
 
