@@ -57,11 +57,11 @@ describe('POST /login', () => {
       for (const body of data) {
         findAccountByUsername.mockResolvedValue({
           account_id: 0,
-          hashedPassword: await bcrypt.hash(body.password, 1)
+          hashedpassword: await bcrypt.hash(body.password, 1)
         });
         findAccountByEmail.mockResolvedValue({
           account_id: 0,
-          hashedPassword: await bcrypt.hash(body.password, 1)
+          hashedpassword: await bcrypt.hash(body.password, 1)
         });
         const response = await request(app)
           .post('/login')
@@ -74,11 +74,11 @@ describe('POST /login', () => {
       for (const body of data) {
         findAccountByUsername.mockResolvedValue({
           account_id: 0,
-          hashedPassword: await bcrypt.hash(body.password, 1)
+          hashedpassword: await bcrypt.hash(body.password, 1)
         });
         findAccountByEmail.mockResolvedValue({
           account_id: 0,
-          hashedPassword: await bcrypt.hash(body.password, 1)
+          hashedpassword: await bcrypt.hash(body.password, 1)
         });
         const response = await request(app)
           .post('/login')
@@ -92,11 +92,11 @@ describe('POST /login', () => {
       for (const body of data) {
         findAccountByUsername.mockResolvedValue({
           account_id: 0,
-          hashedPassword: await bcrypt.hash(body.password, 1)
+          hashedpassword: await bcrypt.hash(body.password, 1)
         });
         findAccountByEmail.mockResolvedValue({
           account_id: 0,
-          hashedPassword: await bcrypt.hash(body.password, 1)
+          hashedpassword: await bcrypt.hash(body.password, 1)
         });
         const response = await request(app)
           .post('/login')
@@ -110,11 +110,11 @@ describe('POST /login', () => {
       for (const body of data) {
         findAccountByUsername.mockResolvedValue({
           account_id: i,
-          hashedPassword: await bcrypt.hash(body.password, 1)
+          hashedpassword: await bcrypt.hash(body.password, 1)
         });
         findAccountByEmail.mockResolvedValue({
           account_id: i,
-          hashedPassword: await bcrypt.hash(body.password, 1)
+          hashedpassword: await bcrypt.hash(body.password, 1)
         });
         const response = await request(app)
           .post('/login')
@@ -236,11 +236,11 @@ describe('POST /login', () => {
       });
 
       test('Responds with 400 status code', async () => {
-        const hashedPassword = await bcrypt.hash('correctPassword8$', 1);
+        const hashedpassword = await bcrypt.hash('correctPassword8$', 1);
         for (const body of invalidPasswords) {
           findAccountByUsername.mockResolvedValue({
             account_id: 0,
-            hashedPassword
+            hashedpassword
           });
           const response = await request(app)
             .post('/login')
@@ -250,11 +250,11 @@ describe('POST /login', () => {
       });
 
       test('Responds with json in content-type header', async () => {
-        const hashedPassword = await bcrypt.hash('correctPassword8$', 1);
+        const hashedpassword = await bcrypt.hash('correctPassword8$', 1);
         for (const body of invalidPasswords) {
           findAccountByUsername.mockResolvedValue({
             account_id: 0,
-            hashedPassword
+            hashedpassword
           });
           const response = await request(app)
             .post('/login')
@@ -265,11 +265,11 @@ describe('POST /login', () => {
       });
 
       test('Responds with errors message in json object', async () => {
-        const hashedPassword = await bcrypt.hash('correctPassword8$', 1);
+        const hashedpassword = await bcrypt.hash('correctPassword8$', 1);
         for (const body of invalidPasswords) {
           findAccountByUsername.mockResolvedValue({
             account_id: 0,
-            hashedPassword
+            hashedpassword
           });
           const response = await request(app)
             .post('/login')
