@@ -3,11 +3,13 @@ const request = require('supertest');
 const findAccountById = jest.fn();
 const saveItem = jest.fn();
 const findCategoryByName = jest.fn();
+const findItemById = jest.fn();
 
 const app = require('../app')({
   findAccountById,
   saveItem,
-  findCategoryByName
+  findCategoryByName,
+  findItemById
 });
 
 const cred = require('../issueToken')(1);
@@ -400,6 +402,106 @@ describe('POST /item', () => {
         .post('/item')
         .send({ name: 'item1', description: 'This is for sale', price: 19.99, quantity: 8, category: 'Clothing' });
       expect(response.statusCode).toBe(401);
-    })
-  })
-})
+    });
+  });
+});
+
+describe('GET /item/:itemId', () => {
+  const mockedId = '86d48fc4-9231-446e-8073-a6e5c0702f85';
+  const mockedId3 = '86d48fc4-9231-446e-8073-a6e5c0702f86';
+  const mockedId2 = '86d48fc4-9231-446e-8073-a6e5c0702f87';
+  describe('itemId is valid', () => {
+
+    const data = [
+      { name: 'name1', description: 'this is item1', seller: { username: 'name1', rating: 3 }, price: 1.5, quantity: 1, category: 'catid1', date_added: new Date() },
+      { name: 'name3', description: 'blah blah', seller: { username: 'anotherme', rating: 1 }, price: 8.35, quantity: 62, category: 'catid2', date_added: new Date() },
+      { name: 'name2', description: 'ipsum stuff', seller: { username: 'whoami', rating: 4 }, price: 7.4, quantity: 32, category: 'catid3', date_added: new Date() },
+    ];
+
+    beforeEach(() => {
+      findItemById.mockReset();
+    });
+
+    test('Responds with 200 status code', async () => {
+      findItemById.mockReset();
+      findItemById.mockResolvedValue(data[0]);
+      const response = await request(app)
+        .get(`/item/${mockedId}`);
+      expect(response.statusCode).toBe(200);
+    });
+
+    test('Searches database for item', async () => {
+      const ids = [mockedId, mockedId2, mockedId3];
+      for (const id of ids) {
+        findItemById.mockReset();
+        findItemById.mockResolvedValue(data[0]);
+        await request(app)
+          .get(`/item/${id}`);
+        expect(findItemById.mock.calls.length).toBe(1);
+        expect(findItemById.mock.calls[0][0]).toBe(id)
+      }
+    });
+
+    test('Responds with json in content-type header', async () => {
+      findItemById.mockReset();
+      findItemById.mockResolvedValue(data[0]);
+      const response = await request(app)
+        .get(`/item/${mockedId}`);
+      expect(response.headers['content-type'])
+        .toEqual(expect.stringContaining('json'));
+    });
+
+    test('Responds with item in json object', async () => {
+      findItemById.mockReset();
+      findItemById.mockResolvedValue(data[0]);
+      const response = await request(app)
+        .get(`/item/${mockedId}`);
+      expect(response.body.item).toBeDefined();
+    });
+
+    test('Item has all needed information', async () => {
+      findItemById.mockReset();
+      findItemById.mockResolvedValue(data[0]);
+      const response = await request(app)
+        .get(`/item/${mockedId}`);
+      expect(response.body.item.name).toBeDefined();
+      expect(response.body.item.description).toBeDefined();
+      expect(response.body.item.seller).toBeDefined();
+      expect(response.body.item.seller.username).toBeDefined();
+      expect(response.body.item.seller.rating).toBeDefined();
+      expect(response.body.item.price).toBeDefined();
+      expect(response.body.item.quantity).toBeDefined();
+      expect(response.body.item.category).toBeDefined();
+      expect(response.body.item.date_added).toBeDefined();
+    });
+
+    test('Item information is correct', async () => {
+      for (const item of data) {
+        findItemById.mockReset();
+        findItemById.mockResolvedValue(item);
+        const response = await request(app)
+          .get(`/item/${mockedId}`);
+        expect(response.body.item.name).toBe(item.name);
+        expect(response.body.item.description).toBe(item.description);
+        expect(response.body.item.seller.username).toBe(item.seller.username);
+        expect(response.body.item.seller.rating).toBe(item.seller.rating);
+        expect(response.body.item.price).toBe(item.price);
+        expect(response.body.item.quantity).toBe(item.quantity);
+        expect(response.body.item.category).toBe(item.category);
+        expect(new Date(response.body.item.date_added).toString()).toBe(item.date_added.toString());
+      }
+    });
+  });
+
+  describe('itemId is invalid', () => {
+    test('Responds with 404 status code', async () => {
+      for (const id of [351, 'mockedId', '5-5-5-5', mockedId]) {
+        findItemById.mockReset();
+        findItemById.mockResolvedValue(null);
+        const response = await request(app)
+          .get(`/item/${id}`);
+        expect(response.statusCode).toBe(404);
+      }
+    });
+  });
+});

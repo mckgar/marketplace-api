@@ -1,5 +1,5 @@
 const express = require('express');
-const { body, validationResult } = require('express-validator');
+const { body, param, validationResult } = require('express-validator');
 const passport = require('passport');
 
 const itemRoute = database => {
@@ -35,7 +35,7 @@ const itemRoute = database => {
       .isInt({ min: 1 })
       .bail()
       .toInt(),
-      async (req, res, next) => {
+    async (req, res, next) => {
       const errors = validationResult(req);
       if (!errors.isEmpty()) {
         res.status(400).json({
@@ -64,6 +64,43 @@ const itemRoute = database => {
             value: req.body.category
           }]
         });
+        return;
+      } catch (err) {
+        next(err);
+      }
+    }
+  ]);
+
+  router.get('/:itemId', [
+    param('itemId')
+      .trim()
+      .escape()
+      .isUUID(),
+    async (req, res, next) => {
+      const errors = validationResult(req);
+      if (!errors.isEmpty()) {
+        // Only error can be invalid id
+        next();
+        return;
+      }
+      try {
+        // Aggregates and joins data in function, reduce external calls; rename?
+        const item = await database.findItemById(req.params.itemId);
+        if (item) {
+          res.status(200).json({
+            item: {
+              name: item.name,
+              description: item.description,
+              seller: item.seller,
+              price: item.price,
+              quantity: item.quantity,
+              category: item.category,
+              date_added: item.date_added
+            }
+          });
+          return;
+        }
+        next();
         return;
       } catch (err) {
         next(err);
