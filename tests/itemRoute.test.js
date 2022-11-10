@@ -4,15 +4,39 @@ const findAccountById = jest.fn();
 const saveItem = jest.fn();
 const findCategoryByName = jest.fn();
 const findItemById = jest.fn();
+const updateItemName = jest.fn();
+const updateItemDescription = jest.fn();
+const updateItemPrice = jest.fn();
+const updateItemQuantity = jest.fn();
+const updateItemCategory = jest.fn();
+
 
 const app = require('../app')({
   findAccountById,
   saveItem,
   findCategoryByName,
-  findItemById
+  findItemById,
+  updateItemName,
+  updateItemDescription,
+  updateItemPrice,
+  updateItemQuantity,
+  updateItemCategory
 });
 
+const mockedId = '86d48fc4-9231-446e-8073-a6e5c0702f85';
+const mockedId3 = '86d48fc4-9231-446e-8073-a6e5c0702f86';
+const mockedId2 = '86d48fc4-9231-446e-8073-a6e5c0702f87';
+
 const cred = require('../issueToken')(1);
+
+const validName = 'item';
+const validDescription = 'This is fine';
+const validPrice = 19.99;
+const validQuantity = 23;
+const validCategory = 'Books';
+
+let longString = 'tooLong';
+while (longString.length < 1024) longString += longString;
 
 describe('POST /item', () => {
   describe('Given valid credentials', () => {
@@ -68,15 +92,6 @@ describe('POST /item', () => {
     });
 
     describe('Given invalid info', () => {
-      const validName = 'item';
-      const validDescription = 'This is fine';
-      const validPrice = 19.99;
-      const validQuantity = 23;
-      const validCategory = 'Books';
-
-      let longString = 'tooLong';
-      while (longString.length < 1024) longString += longString;
-
       // Categories will be predefined, must match one of those
       const badCategory = [
         { name: validName, description: validDescription, price: validPrice, quantity: validQuantity },
@@ -407,9 +422,6 @@ describe('POST /item', () => {
 });
 
 describe('GET /item/:itemId', () => {
-  const mockedId = '86d48fc4-9231-446e-8073-a6e5c0702f85';
-  const mockedId3 = '86d48fc4-9231-446e-8073-a6e5c0702f86';
-  const mockedId2 = '86d48fc4-9231-446e-8073-a6e5c0702f87';
   describe('itemId is valid', () => {
 
     const data = [
@@ -502,6 +514,583 @@ describe('GET /item/:itemId', () => {
           .get(`/item/${id}`);
         expect(response.statusCode).toBe(404);
       }
+    });
+  });
+});
+
+describe('PUT /item/:itemId', () => {
+  describe('Given valid item', () => {
+    describe('Given valid credentials', () => {
+
+      beforeAll(() => {
+        findAccountById.mockResolvedValue({
+          account_id: 1,
+          username: 'seller'
+        });
+        findItemById.mockResolvedValue({ seller: 1 })
+      });
+
+      describe('Updating name', () => {
+        describe('Given valid info', () => {
+          const data = [
+            { name: validName },
+            { name: 'another name' },
+            { name: 'snake oil' }
+          ];
+
+          test('Responds with 200 status code', async () => {
+            const response = await request(app)
+              .put(`/item/${mockedId}`)
+              .send(data[0])
+              .set('Authorization', `Bearer ${cred}`);
+            expect(response.statusCode).toBe(200);
+          });
+
+          test('Update is made on correct item', async () => {
+            for (const id of [mockedId, mockedId2, mockedId3]) {
+              updateItemName.mockReset();
+              await request(app)
+                .put(`/item/${id}`)
+                .send(data[0])
+                .set('Authorization', `Bearer ${cred}`);
+              expect(updateItemName.mock.calls.length).toBe(1);
+              expect(updateItemName.mock.calls[0][0]).toBe(id);
+            }
+          });
+
+          test('Name is updated', async () => {
+            for (const body of data) {
+              updateItemName.mockReset();
+              await request(app)
+                .put(`/item/${mockedId}`)
+                .send(body)
+                .set('Authorization', `Bearer ${cred}`);
+              expect(updateItemName.mock.calls[0][1]).toBe(body.name);
+            }
+          });
+        });
+
+        describe('Given invalid info', () => {
+          const data = [
+            { name: null },
+            { name: '' },
+            { name: longString }
+          ];
+
+          test('Responds with 400 status code', async () => {
+            for (const body of data) {
+              const response = await request(app)
+                .put(`/item/${mockedId}`)
+                .send(body)
+                .set('Authorization', `Bearer ${cred}`);
+              expect(response.statusCode).toBe(400);
+            }
+          });
+
+          test('Responds with json in content-type header', async () => {
+            for (const body of data) {
+              const response = await request(app)
+                .put(`/item/${mockedId}`)
+                .send(body)
+                .set('Authorization', `Bearer ${cred}`);
+              expect(response.headers['content-type'])
+                .toEqual(expect.stringContaining('json'));
+            }
+          });
+
+          test('Responds with errors in json object', async () => {
+            for (const body of data) {
+              const response = await request(app)
+                .put(`/item/${mockedId}`)
+                .send(body)
+                .set('Authorization', `Bearer ${cred}`);
+              expect(response.body.errors).toBeDefined();
+            }
+          });
+
+          test('Error message is only for name', async () => {
+            for (const body of data) {
+              const response = await request(app)
+                .put(`/item/${mockedId}`)
+                .send(body)
+                .set('Authorization', `Bearer ${cred}`);
+              expect(response.body.errors.length).toBe(1);
+              expect(response.body.errors[0].param).toBe('name');
+            }
+          });
+        });
+      });
+
+      describe('Updating description', () => {
+        describe('Given valid info', () => {
+          const data = [
+            { description: validDescription },
+            { description: 'another description' },
+            { description: 'cures everything forever' }
+          ];
+
+          test('Responds with 200 status code', async () => {
+            const response = await request(app)
+              .put(`/item/${mockedId}`)
+              .send(data[0])
+              .set('Authorization', `Bearer ${cred}`);
+            expect(response.statusCode).toBe(200);
+          });
+
+          test('Update is made on correct item', async () => {
+            for (const id of [mockedId, mockedId2, mockedId3]) {
+              updateItemDescription.mockReset();
+              await request(app)
+                .put(`/item/${id}`)
+                .send(data[0])
+                .set('Authorization', `Bearer ${cred}`);
+              expect(updateItemDescription.mock.calls.length).toBe(1);
+              expect(updateItemDescription.mock.calls[0][0]).toBe(id);
+            }
+          });
+
+          test('Description is updated', async () => {
+            for (const body of data) {
+              updateItemDescription.mockReset();
+              await request(app)
+                .put(`/item/${mockedId}`)
+                .send(body)
+                .set('Authorization', `Bearer ${cred}`);
+              expect(updateItemDescription.mock.calls[0][1]).toBe(body.description);
+            }
+          });
+        });
+
+        describe('Given invalid info', () => {
+          const data = [
+            { description: null },
+            { description: '' },
+            { description: longString }
+          ];
+
+          test('Responds with 400 status code', async () => {
+            for (const body of data) {
+              const response = await request(app)
+                .put(`/item/${mockedId}`)
+                .send(body)
+                .set('Authorization', `Bearer ${cred}`);
+              expect(response.statusCode).toBe(400);
+            }
+          });
+
+          test('Responds with json in content-type header', async () => {
+            for (const body of data) {
+              const response = await request(app)
+                .put(`/item/${mockedId}`)
+                .send(body)
+                .set('Authorization', `Bearer ${cred}`);
+              expect(response.headers['content-type'])
+                .toEqual(expect.stringContaining('json'));
+            }
+          });
+
+          test('Responds with errors in json object', async () => {
+            for (const body of data) {
+              const response = await request(app)
+                .put(`/item/${mockedId}`)
+                .send(body)
+                .set('Authorization', `Bearer ${cred}`);
+              expect(response.body.errors).toBeDefined();
+            }
+          });
+
+          test('Error message is only for description', async () => {
+            for (const body of data) {
+              const response = await request(app)
+                .put(`/item/${mockedId}`)
+                .send(body)
+                .set('Authorization', `Bearer ${cred}`);
+              expect(response.body.errors.length).toBe(1);
+              expect(response.body.errors[0].param).toBe('description');
+            }
+          });
+        });
+      });
+
+      describe('Updating price', () => {
+        describe('Given valid info', () => {
+          const data = [
+            { price: validPrice },
+            { price: 6 },
+            { price: 23.23 },
+            { price: 0 }
+          ];
+
+          test('Responds with 200 status code', async () => {
+            const response = await request(app)
+              .put(`/item/${mockedId}`)
+              .send(data[0])
+              .set('Authorization', `Bearer ${cred}`);
+            expect(response.statusCode).toBe(200);
+          });
+
+          test('Update is made on correct item', async () => {
+            for (const id of [mockedId, mockedId2, mockedId3]) {
+              updateItemPrice.mockReset();
+              await request(app)
+                .put(`/item/${id}`)
+                .send(data[0])
+                .set('Authorization', `Bearer ${cred}`);
+              expect(updateItemPrice.mock.calls.length).toBe(1);
+              expect(updateItemPrice.mock.calls[0][0]).toBe(id);
+            }
+          });
+
+          test('Price is updated', async () => {
+            for (const body of data) {
+              updateItemPrice.mockReset();
+              await request(app)
+                .put(`/item/${mockedId}`)
+                .send(body)
+                .set('Authorization', `Bearer ${cred}`);
+              expect(updateItemPrice.mock.calls[0][1]).toBe(body.price);
+            }
+          });
+        });
+
+        describe('Given invalid info', () => {
+          const data = [
+            { price: null },
+            { price: '' },
+            { price: 'free' },
+            { price: -1 },
+            { price: '$1' }
+          ];
+
+          test('Responds with 400 status code', async () => {
+            for (const body of data) {
+              const response = await request(app)
+                .put(`/item/${mockedId}`)
+                .send(body)
+                .set('Authorization', `Bearer ${cred}`);
+              expect(response.statusCode).toBe(400);
+            }
+          });
+
+          test('Responds with json in content-type header', async () => {
+            for (const body of data) {
+              const response = await request(app)
+                .put(`/item/${mockedId}`)
+                .send(body)
+                .set('Authorization', `Bearer ${cred}`);
+              expect(response.headers['content-type'])
+                .toEqual(expect.stringContaining('json'));
+            }
+          });
+
+          test('Responds with errors in json object', async () => {
+            for (const body of data) {
+              const response = await request(app)
+                .put(`/item/${mockedId}`)
+                .send(body)
+                .set('Authorization', `Bearer ${cred}`);
+              expect(response.body.errors).toBeDefined();
+            }
+          });
+
+          test('Error message is only for price', async () => {
+            for (const body of data) {
+              const response = await request(app)
+                .put(`/item/${mockedId}`)
+                .send(body)
+                .set('Authorization', `Bearer ${cred}`);
+              expect(response.body.errors.length).toBe(1);
+              expect(response.body.errors[0].param).toBe('price');
+            }
+          });
+        });
+      });
+
+      describe('Updating quantity', () => {
+        describe('Given valid info', () => {
+          const data = [
+            { quantity: validQuantity },
+            { quantity: 6000 },
+            { quantity: 23 },
+            { quantity: 1 }
+          ];
+
+          test('Responds with 200 status code', async () => {
+            const response = await request(app)
+              .put(`/item/${mockedId}`)
+              .send(data[0])
+              .set('Authorization', `Bearer ${cred}`);
+            expect(response.statusCode).toBe(200);
+          });
+
+          test('Update is made on correct item', async () => {
+            for (const id of [mockedId, mockedId2, mockedId3]) {
+              updateItemQuantity.mockReset();
+              await request(app)
+                .put(`/item/${id}`)
+                .send(data[0])
+                .set('Authorization', `Bearer ${cred}`);
+              expect(updateItemQuantity.mock.calls.length).toBe(1);
+              expect(updateItemQuantity.mock.calls[0][0]).toBe(id);
+            }
+          });
+
+          test('Quantity is updated', async () => {
+            for (const body of data) {
+              updateItemQuantity.mockReset();
+              await request(app)
+                .put(`/item/${mockedId}`)
+                .send(body)
+                .set('Authorization', `Bearer ${cred}`);
+              expect(updateItemQuantity.mock.calls[0][1]).toBe(body.quantity);
+            }
+          });
+        });
+
+        describe('Given invalid info', () => {
+          const data = [
+            { quantity: null },
+            { quantity: '' },
+            { quantity: 'none' },
+            { quantity: -1 },
+            { quantity: 0 },
+            { quantity: '5 items' },
+            { quantity: 5.5 },
+          ];
+
+          test('Responds with 400 status code', async () => {
+            for (const body of data) {
+              const response = await request(app)
+                .put(`/item/${mockedId}`)
+                .send(body)
+                .set('Authorization', `Bearer ${cred}`);
+              expect(response.statusCode).toBe(400);
+            }
+          });
+
+          test('Responds with json in content-type header', async () => {
+            for (const body of data) {
+              const response = await request(app)
+                .put(`/item/${mockedId}`)
+                .send(body)
+                .set('Authorization', `Bearer ${cred}`);
+              expect(response.headers['content-type'])
+                .toEqual(expect.stringContaining('json'));
+            }
+          });
+
+          test('Responds with errors in json object', async () => {
+            for (const body of data) {
+              const response = await request(app)
+                .put(`/item/${mockedId}`)
+                .send(body)
+                .set('Authorization', `Bearer ${cred}`);
+              expect(response.body.errors).toBeDefined();
+            }
+          });
+
+          test('Error message is only for quantity', async () => {
+            for (const body of data) {
+              const response = await request(app)
+                .put(`/item/${mockedId}`)
+                .send(body)
+                .set('Authorization', `Bearer ${cred}`);
+              expect(response.body.errors.length).toBe(1);
+              expect(response.body.errors[0].param).toBe('quantity');
+            }
+          });
+        });
+      });
+
+      describe('Updating category', () => {
+        describe('Given valid info', () => {
+          const data = [
+            { category: validCategory },
+            { category: 'Another valid' },
+            { category: 'clothing' }
+          ];
+
+          beforeEach(() => {
+            findCategoryByName.mockReset();
+            findCategoryByName.mockResolvedValue(mockedId2);
+          });
+
+          test('Responds with 200 status code', async () => {
+            const response = await request(app)
+              .put(`/item/${mockedId}`)
+              .send(data[0])
+              .set('Authorization', `Bearer ${cred}`);
+            expect(response.statusCode).toBe(200);
+          });
+
+          test('Category id is retrieved from database', async () => {
+            for (const body of data) {
+              findCategoryByName.mockReset();
+              await request(app)
+                .put(`/item/${mockedId}`)
+                .send(body)
+                .set('Authorization', `Bearer ${cred}`);
+              expect(findCategoryByName.mock.calls.length).toBe(1);
+              expect(findCategoryByName.mock.calls[0][0]).toBe(body.category);
+            }
+          });
+
+          test('Update is made on correct item', async () => {
+            for (const id of [mockedId, mockedId2, mockedId3]) {
+              updateItemCategory.mockReset();
+              await request(app)
+                .put(`/item/${id}`)
+                .send(data[0])
+                .set('Authorization', `Bearer ${cred}`);
+              expect(updateItemCategory.mock.calls.length).toBe(1);
+              expect(updateItemCategory.mock.calls[0][0]).toBe(id);
+            }
+          });
+
+          test('Category is updated', async () => {
+            let i = 0;
+            for (const body of data) {
+              updateItemCategory.mockReset();
+              findCategoryByName.mockReset();
+              findCategoryByName.mockResolvedValue(i);
+              await request(app)
+                .put(`/item/${mockedId}`)
+                .send(body)
+                .set('Authorization', `Bearer ${cred}`);
+              expect(updateItemCategory.mock.calls[0][1]).toBe(i);
+              i++;
+            }
+          });
+        });
+
+        describe('Given invalid info', () => {
+          const data = [
+            { category: null },
+            { category: '' },
+            { category: 'does not exist' },
+            { category: longString }
+          ];
+
+          beforeEach(() => {
+            findCategoryByName.mockReset();
+            findCategoryByName.mockResolvedValue(null);
+          })
+
+          test('Responds with 400 status code', async () => {
+            for (const body of data) {
+              const response = await request(app)
+                .put(`/item/${mockedId}`)
+                .send(body)
+                .set('Authorization', `Bearer ${cred}`);
+              expect(response.statusCode).toBe(400);
+            }
+          });
+
+          test('Responds with json in content-type header', async () => {
+            for (const body of data) {
+              const response = await request(app)
+                .put(`/item/${mockedId}`)
+                .send(body)
+                .set('Authorization', `Bearer ${cred}`);
+              expect(response.headers['content-type'])
+                .toEqual(expect.stringContaining('json'));
+            }
+          });
+
+          test('Responds with errors in json object', async () => {
+            for (const body of data) {
+              const response = await request(app)
+                .put(`/item/${mockedId}`)
+                .send(body)
+                .set('Authorization', `Bearer ${cred}`);
+              expect(response.body.errors).toBeDefined();
+            }
+          });
+
+          test('Error message is only for category', async () => {
+            for (const body of data) {
+              const response = await request(app)
+                .put(`/item/${mockedId}`)
+                .send(body)
+                .set('Authorization', `Bearer ${cred}`);
+              expect(response.body.errors.length).toBe(1);
+              expect(response.body.errors[0].param).toBe('category');
+            }
+          });
+        });
+      });
+    })
+
+    describe('Given invalid crendentials', () => {
+
+      beforeAll(() => {
+        findAccountById.mockResolvedValue({
+          account_id: 1,
+          username: 'seller'
+        });
+        findItemById.mockResolvedValue({ seller: 2 });
+      });
+
+      test('Responds with 403 status code', async () => {
+        const response = await request(app)
+          .put(`/item/${mockedId}`)
+          .send({ name: 'newName' })
+          .set('Authorization', `Bearer ${cred}`);
+        expect(response.status).toBe(403);
+      });
+    });
+
+    describe('Given no credentials', () => {
+      test('Responds with 401 status code', async () => {
+        findAccountById.mockResolvedValue(null);
+        const response = await request(app)
+          .put(`/item/${mockedId}`)
+          .send({ name: 'newName' });
+        expect(response.status).toBe(401);
+      });
+    })
+  });
+
+  describe('Given invalid item', () => {
+
+    const data = [351, 'mockedId', '5-5-5-5', mockedId];
+
+    describe('Given credentials', () => {
+
+      beforeAll(() => {
+        findAccountById.mockResolvedValue({
+          account_id: 1,
+          username: 'seller'
+        });
+      });
+
+      // Can't have permission to edit something that doesn't exist
+      test('Responds with 403 status code', async () => {
+        findItemById.mockResolvedValue(null);
+        for (const id of data) {
+          const response = await request(app)
+            .put(`/item/${id}`)
+            .send({ name: 'newName' })
+            .set('Authorization', `Bearer ${cred}`);
+          expect(response.status).toBe(403);
+        }
+      });
+    });
+
+    describe('Given no credentials', () => {
+
+      beforeAll(() => {
+        findAccountById.mockResolvedValue(null);
+      });
+
+      test('Responds with 401 status code', async () => {
+        for (const id of data) {
+          const response = await request(app)
+            .put(`/item/${id}`)
+            .send({ name: 'newName' });
+          expect(response.status).toBe(401);
+        }
+      });
     });
   });
 });
