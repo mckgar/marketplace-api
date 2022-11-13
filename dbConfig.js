@@ -10,6 +10,8 @@ const pool = new Pool(
   }
 );
 
+// Create account
+
 exports.createAccount = async (username, hashedPassword, email) => {
   try {
     const newUser = await pool.query(
@@ -22,6 +24,8 @@ exports.createAccount = async (username, hashedPassword, email) => {
   }
 };
 
+// Find account
+
 exports.findAccountByUsername = async username => {
   try {
     const user = await pool.query(
@@ -30,7 +34,7 @@ exports.findAccountByUsername = async username => {
     );
     return user.rows[0];
   } catch (err) {
-    return err;
+    return Promise.reject(err);
   }
 };
 
@@ -42,7 +46,7 @@ exports.findAccountByEmail = async email => {
     );
     return user.rows[0];
   } catch (err) {
-    return err;
+    return Promise.reject(err);
   }
 };
 
@@ -54,9 +58,11 @@ exports.findAccountById = async accountId => {
     );
     return user.rows[0];
   } catch (err) {
-    return err;
+    return Promise.reject(err);
   }
 };
+
+// Update account
 
 exports.updateFirstName = async (accountId, firstName) => {
   try {
@@ -65,7 +71,7 @@ exports.updateFirstName = async (accountId, firstName) => {
       [firstName, accountId]
     );
   } catch (err) {
-    return err;
+    return Promise.reject(err);
   }
 };
 
@@ -76,7 +82,7 @@ exports.updateLastName = async (accountId, lastName) => {
       [lastName, accountId]
     );
   } catch (err) {
-    return err;
+    return Promise.reject(err);
   }
 };
 
@@ -87,7 +93,7 @@ exports.updateEmail = async (accountId, newEmail) => {
       [newEmail, accountId]
     );
   } catch (err) {
-    return err;
+    return Promise.reject(err);
   }
 };
 
@@ -98,6 +104,106 @@ exports.updatePassword = async (accountId, newHashedPassword) => {
       [newHashedPassword, accountId]
     );
   } catch (err) {
-    return err;
+    return Promise.reject(err);
+  }
+};
+
+// Create item
+
+exports.saveItem = async (name, description, price, quantity, category) => {
+  try {
+    const newItem = await pool.query(
+      'INSERT INTO items(name, description, price, quantity, category) VALUES($1, $2, $3, $4, $5)',
+      [name, description, price, quantity, category]
+    );
+    return newItem.item_id;
+  } catch (err) {
+    return Promise.reject(err);
+  }
+};
+
+// Find item
+
+exports.findItemById = async (itemId) => {
+  try {
+    const search = await pool.query(
+      'SELECT * FROM items WHERE item_id = $1 LIMIT 1',
+      [itemId]
+    );
+    const item = search.rows[0];
+    return item;
+  } catch (err) {
+    return Promise.reject(err);
+  }
+};
+
+// Update item
+
+exports.updateItemName = async (itemId, name) => {
+  try {
+    await pool.query(
+      'UPDATE items SET item_name = $1 WHERE item_id = $2',
+      [name, itemId]
+    );
+  } catch (err) {
+    return Promise.reject(err);
+  }
+};
+
+exports.updateItemDescription = async (itemId, description) => {
+  try {
+    await pool.query(
+      'UPDATE items SET item_description = $1 WHERE item_id = $2',
+      [description, itemId]
+    );
+  } catch (err) {
+    return Promise.reject(err);
+  }
+};
+
+exports.updateItemPrice = async (itemId, price) => {
+  try {
+    await pool.query(
+      'UPDATE items SET price = $1 WHERE item_id = $2',
+      [price, itemId]
+    );
+  } catch (err) {
+    return Promise.reject(err);
+  }
+};
+
+exports.updateItemQuantity = async (itemId, quantity) => {
+  try {
+    await pool.query(
+      'UPDATE items SET quantity = $1 WHERE item_id = $2',
+      [quantity, itemId]
+    );
+  } catch (err) {
+    return Promise.reject(err);
+  }
+};
+
+exports.updateItemCategory = async (itemId, category) => {
+  try {
+    await pool.query(
+      'UPDATE items SET category = $1 WHERE item_id = $2',
+      [category, itemId]
+    );
+  } catch (err) {
+    return Promise.reject(err);
+  }
+};
+
+// Find category
+
+exports.findCategoryByName = async name => {
+  try {
+    const search= pool.query(
+      'SELECT * FROM categories WHERE category_name = $1 LIMIT 1',
+      [name]
+    );
+    return search[0];
+  } catch (err) {
+    return Promise.reject(err);
   }
 };
