@@ -42,7 +42,7 @@ const onListening = () => {
   debug(`Listening on ${bind}`);
 }
 
-const app = require('../app')(require('../dbConfig'));
+const app = require('../app')(require('../db/dbConfig'));
 const debug = require('debug')('reddit-clone-api:server');
 const http = require('http');
 
