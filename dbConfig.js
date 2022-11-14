@@ -194,6 +194,19 @@ exports.updateItemCategory = async (itemId, category) => {
   }
 };
 
+// Delete item
+
+exports.deleteItem = async itemId => {
+  try {
+    await pool.query(
+      'DELETE FROM items WHERE item_id = $1',
+      [itemId]
+    )
+  } catch (err) {
+    return Promise.reject(err);
+  }
+}
+
 // Find category
 
 exports.findCategoryByName = async name => {
