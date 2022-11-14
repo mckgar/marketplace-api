@@ -199,7 +199,34 @@ const itemRoute = database => {
         next(err);
       }
     }
-  ])
+  ]);
+
+  router.delete('/:itemId', [
+    passport.authenticate('jwt', { session: false }),
+    param('itemId')
+      .trim()
+      .escape()
+      .isUUID(),
+    async (req, res, next) => {
+      const errors = validationResult(req);
+      if (!errors.isEmpty()) {
+        res.sendStatus(403);
+        return;
+      }
+      try {
+        const item = await database.findItemById(req.params.itemId);
+        if (item && item.seller === req.user.account_id) {
+          await database.deleteItem(req.params.itemId);
+          res.sendStatus(200);
+          return;
+        }
+        res.sendStatus(403);
+        return;
+      } catch (err) {
+        next(err);
+      }
+    }
+  ]);
 
   return router;
 }

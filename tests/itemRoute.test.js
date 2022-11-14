@@ -9,7 +9,7 @@ const updateItemDescription = jest.fn();
 const updateItemPrice = jest.fn();
 const updateItemQuantity = jest.fn();
 const updateItemCategory = jest.fn();
-
+const deleteItem = jest.fn();
 
 const app = require('../app')({
   findAccountById,
@@ -20,7 +20,8 @@ const app = require('../app')({
   updateItemDescription,
   updateItemPrice,
   updateItemQuantity,
-  updateItemCategory
+  updateItemCategory,
+  deleteItem
 });
 
 const mockedId = '86d48fc4-9231-446e-8073-a6e5c0702f85';
@@ -1089,6 +1090,106 @@ describe('PUT /item/:itemId', () => {
             .put(`/item/${id}`)
             .send({ name: 'newName' });
           expect(response.status).toBe(401);
+        }
+      });
+    });
+  });
+});
+
+describe('DELETE /item/:itemid', () => {
+  describe('Given valid item', () => {
+    describe('Given valid credentials', () => {
+
+      beforeAll(() => {
+        findAccountById.mockResolvedValue({
+          account_id: 1
+        });
+        findItemById.mockResolvedValue({ seller: 1 });
+      });
+
+      test('Responds with 200 status code', async () => {
+        const response = await request(app)
+          .delete(`/item/${mockedId}`)
+          .set('Authorization', `Bearer ${cred}`);
+        expect(response.statusCode).toBe(200);
+      });
+
+      test('Item is deleted from database', async () => {
+        for (const id of [mockedId, mockedId2, mockedId3]) {
+          deleteItem.mockReset();
+          await request(app)
+            .delete(`/item/${id}`)
+            .set('Authorization', `Bearer ${cred}`);
+          expect(deleteItem.mock.calls.length).toBe(1);
+          expect(deleteItem.mock.calls[0][0]).toBe(id);
+        }
+      });
+    });
+
+    describe('Given invalid credentials', () => {
+
+      beforeAll(() => {
+        findAccountById.mockResolvedValue({
+          account_id: 1
+        });
+        findItemById.mockResolvedValue({ seller: 2 });
+      });
+
+      test('Responds with 403 status code', async () => {
+        const response = await request(app)
+          .delete(`/item/${mockedId}`)
+          .set('Authorization', `Bearer ${cred}`);
+        expect(response.statusCode).toBe(403);
+      });
+    });
+
+    describe('Given no credentials', () => {
+
+      beforeAll(() => {
+        findAccountById.mockResolvedValue(null);
+        findItemById.mockResolvedValue({ seller: 2 });
+      });
+
+      test('Responds with 401 status code', async () => {
+        const response = await request(app)
+          .delete(`/item/${mockedId}`);
+        expect(response.statusCode).toBe(401);
+      });
+    });
+  });
+
+  describe('Given invalid item', () => {
+    describe('Given credentials', () => {
+
+      beforeAll(() => {
+        findAccountById.mockResolvedValue({
+          account_id: 1
+        });
+        findItemById.mockResolvedValue(null);
+      });
+
+      test('Responds with 403 status code', async () => {
+        for (const id of [mockedId, 'wrong', '123']) {
+          const response = await request(app)
+            .delete(`/item/${id}`)
+            .set('Authorization', `Bearer ${cred}`);
+          expect(response.statusCode).toBe(403);
+        }
+      });
+    });
+
+    describe('Given no credentials', () => {
+
+      beforeAll(() => {
+        findAccountById.mockResolvedValue(null);
+        findItemById.mockResolvedValue(null);
+      });
+
+      test('Responds with 401 status code', async () => {
+        for (const id of [mockedId, 'wrong', '123']) {
+          const response = await request(app)
+            .delete(`/item/${id}`);
+          expect(response.statusCode).toBe(401);
         }
       });
     });
