@@ -11,6 +11,8 @@ const updateItemQuantity = jest.fn();
 const updateItemCategory = jest.fn();
 const deleteItem = jest.fn();
 
+const retrieveItems = jest.fn();
+
 const app = require('../app')({
   findAccountById,
   saveItem,
@@ -21,7 +23,8 @@ const app = require('../app')({
   updateItemPrice,
   updateItemQuantity,
   updateItemCategory,
-  deleteItem
+  deleteItem,
+  retrieveItems
 });
 
 const mockedId = '86d48fc4-9231-446e-8073-a6e5c0702f85';
@@ -418,6 +421,173 @@ describe('POST /item', () => {
         .post('/item')
         .send({ name: 'item1', description: 'This is for sale', price: 19.99, quantity: 8, category: 'Clothing' });
       expect(response.statusCode).toBe(401);
+    });
+  });
+});
+
+describe('GET /item', () => {
+  // Retrieve item list by query
+  // Queries:
+  //   p (price): relevent (default), low, high
+  //   c (category): all (default), any category in db
+  //   o (offset; number of items to offset by): 0 (default); { min: 0 }
+  //   l (limit; max number of items returned): 20 (default); { min: 10, max: 100 }
+
+  test('Responds with 200 status code', async () => {
+    const response = await request(app)
+      .get(`/item`);
+    expect(response.statusCode).toBe(200);
+  });
+
+  test('Searches database', async () => {
+    retrieveItems.mockReset();
+    await request(app)
+      .get(`/item`);
+    expect(retrieveItems.mock.calls.length).toBe(1);
+  });
+
+  test('Default query submits default queries to db', async () => {
+    retrieveItems.mockReset();
+    await request(app)
+      .get(`/item`);
+    expect(retrieveItems.mock.calls[0][0]).toBe('relevent'); // p
+    expect(retrieveItems.mock.calls[0][1]).toBe('all'); // c
+    expect(retrieveItems.mock.calls[0][2]).toBe(0); // o
+    expect(retrieveItems.mock.calls[0][3]).toBe(20); // l
+  });
+
+  test('Responds with json in content-type header', async () => {
+    const response = await request(app)
+      .get(`/item`);
+    expect(response.headers['content-type'])
+      .toEqual(expect.stringContaining('json'));
+  });
+
+  test('Responds with items in json object', async () => {
+    const response = await request(app)
+      .get(`/item`);
+    expect(response.body.items).toBeDefined();
+  });
+
+  test('Items is an array', async () => {
+    const response = await request(app)
+      .get(`/item`);
+    expect(response.body.items).toBeInstanceOf(Array);
+  });
+
+  test('Items is response from db query', async () => {
+    for (let i = 0; i < 3; i++) {
+      retrieveItems.mockReset();
+      const value = [
+        {
+          id: i,
+          name: 'test item'
+        },
+        {
+          id: i * 2,
+          name: 'another test item'
+        },
+      ];
+      retrieveItems.mockResolvedValue(value);
+      const response = await request(app)
+        .get(`/item`);
+      expect(response.body.items).toEqual(value);
+    }
+  });
+
+  describe('Given p query', () => {
+    describe('p query is valid', () => {
+      test('DB query is passed given p query value', async () => {
+        for (const value of ['relevent', 'low', 'high']) {
+          retrieveItems.mockReset();
+          await request(app)
+            .get(`/item?p=${value}`);
+          expect(retrieveItems.mock.calls[0][0]).toBe(value);
+        }
+      });
+    });
+
+    describe('p query is invalid', () => {
+      test('DB query is passed default p query value', async () => {
+        for (const value of [null, 8, 'bad_value', '']) {
+          retrieveItems.mockReset();
+          await request(app)
+            .get(`/item?p=${value}`);
+          expect(retrieveItems.mock.calls[0][0]).toBe('relevent');
+        }
+      });
+    });
+  });
+
+  describe('Given c query', () => {
+    describe('c query is valid', () => {
+      test('DB query is passed given c query value', async () => {
+        for (const value of ['all', 'books', 'clothing', 'toys', 'games', 'accessories', 'decorations', 'office']) {
+          retrieveItems.mockReset();
+          await request(app)
+            .get(`/item?c=${value}`);
+          expect(retrieveItems.mock.calls[0][1]).toBe(value);
+        }
+      });
+    });
+
+    describe('c query is invalid', () => {
+      test('DB query is passed default c query value', async () => {
+        for (const value of [null, 8, 'bad_value', '']) {
+          retrieveItems.mockReset();
+          await request(app)
+            .get(`/item?c=${value}`);
+          expect(retrieveItems.mock.calls[0][1]).toBe('all');
+        }
+      });
+    });
+  });
+
+  describe('Given o query', () => {
+    describe('o query is valid', () => {
+      test('DB query is passed given o query value', async () => {
+        for (const value of [0, 5, 100, 10000000]) {
+          retrieveItems.mockReset();
+          await request(app)
+            .get(`/item?o=${value}`);
+          expect(retrieveItems.mock.calls[0][2]).toBe(value);
+        }
+      });
+    });
+
+    describe('o query is invalid', () => {
+      test('DB query is passed default o query value', async () => {
+        for (const value of [null, '', 'one', -1, 2.5]) {
+          retrieveItems.mockReset();
+          await request(app)
+            .get(`/item?o=${value}`);
+          expect(retrieveItems.mock.calls[0][2]).toBe(0);
+        }
+      });
+    });
+  });
+
+  describe('Given l query', () => {
+    describe('l query is valid', () => {
+      test('DB query is passed given l query value', async () => {
+        for (const value of [10, 20, 75, 100]) {
+          retrieveItems.mockReset();
+          await request(app)
+            .get(`/item?l=${value}`);
+          expect(retrieveItems.mock.calls[0][3]).toBe(value);
+        }
+      });
+    });
+
+    describe('l query is invalid', () => {
+      test('DB query is passed default l query value', async () => {
+        for (const value of [null, '', 'one', -1, 9, 22.5, 101]) {
+          retrieveItems.mockReset();
+          await request(app)
+            .get(`/item?l=${value}`);
+          expect(retrieveItems.mock.calls[0][3]).toBe(20);
+        }
+      });
     });
   });
 });

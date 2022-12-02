@@ -1,6 +1,8 @@
 const express = require('express');
-const { body, param, validationResult } = require('express-validator');
+const { body, param, query, validationResult } = require('express-validator');
 const passport = require('passport');
+
+const categories = ['books', 'clothing', 'toys', 'games', 'accessories', 'decorations', 'office']
 
 const itemRoute = database => {
   const router = express.Router();
@@ -67,6 +69,64 @@ const itemRoute = database => {
         return;
       } catch (err) {
         next(err);
+      }
+    }
+  ]);
+
+  router.get('/', [
+    query('p')
+      .trim()
+      .escape()
+      .customSanitizer(value => {
+        if (!['relevent', 'low', 'high'].includes(value)) {
+          return 'relevent';
+        }
+        return value;
+      }),
+    query('c')
+      .trim()
+      .escape()
+      .customSanitizer(value => {
+        if (!categories.includes(value)) {
+          return 'all';
+        }
+        return value;
+      }),
+    query('o')
+      .trim()
+      .escape()
+      .customSanitizer(value => {
+        if (!value) {
+          return 0;
+        }
+        value = parseFloat(value, 10);
+        if (isNaN(value) || value < 0 || value % 1 !== 0) {
+          return 0;
+        }
+        return value;
+      }),
+    query('l')
+      .trim()
+      .escape()
+      .customSanitizer(value => {
+        if (!value) {
+          return 20;
+        }
+        value = parseFloat(value, 10);
+        if (isNaN(value) || value < 10 || value > 100 || value % 1 !== 0) {
+          return 20;
+        }
+        return value;
+      }),
+    async (req, res, next) => {
+      try {
+        const items = await database.retrieveItems(req.query.p, req.query.c, req.query.o, req.query.l);
+        res.status(200).json({
+          items: items || []
+        });
+        return;
+      } catch (err) {
+        next(err)
       }
     }
   ]);
