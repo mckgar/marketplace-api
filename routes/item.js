@@ -13,6 +13,7 @@ const itemRoute = database => {
     body('category')
       .trim()
       .escape()
+      .toLowerCase()
       .isLength({ min: 1 }).withMessage('Category name is required')
       .isLength({ max: 255 }).withMessage('Category was not found'),
     body('name')
@@ -54,7 +55,7 @@ const itemRoute = database => {
             req.body.description,
             req.body.price,
             req.body.quantity,
-            category
+            category.category_id
           );
           res.sendStatus(201);
           return;

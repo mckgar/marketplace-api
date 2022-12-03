@@ -75,7 +75,9 @@ describe('POST /item', () => {
             username: 'seller'
           });
           findCategoryByName.mockReset();
-          findCategoryByName.mockResolvedValue(i);
+          findCategoryByName.mockResolvedValue({
+            category_id: i
+          });
           saveItem.mockReset();
           await request(app)
             .post('/item')
@@ -88,7 +90,7 @@ describe('POST /item', () => {
           expect(saveItem.mock.calls[0][3]).toBe(body.price);
           expect(saveItem.mock.calls[0][4]).toBe(body.quantity);
           expect(findCategoryByName.mock.calls.length).toBe(1);
-          expect(findCategoryByName.mock.calls[0][0]).toBe(body.category);
+          expect(findCategoryByName.mock.calls[0][0]).toBe(body.category.toLowerCase());
           expect(saveItem.mock.calls[0][5]).toBe(i);
           i++;
         }
