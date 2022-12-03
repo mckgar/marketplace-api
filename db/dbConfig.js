@@ -110,15 +110,40 @@ exports.updatePassword = async (accountId, newHashedPassword) => {
 
 // Create item
 
-exports.saveItem = async (name, description, price, quantity, category) => {
+exports.saveItem = async (sellerId, name, description, price, quantity, category) => {
   try {
     const newItem = await pool.query(
-      'INSERT INTO items(name, description, price, quantity, category) VALUES($1, $2, $3, $4, $5)',
-      [name, description, price, quantity, category]
+      `
+      INSERT INTO items(seller, item_name, item_description, price, quantity, category, date_added) 
+      VALUES($1, $2, $3, $4, $5, $6, NOW())
+      `,
+      [sellerId, name, description, price, quantity, category]
     );
     return newItem.item_id;
   } catch (err) {
     return Promise.reject(err);
+  }
+};
+
+// Find many items
+
+exports.retrieveItems = async (price, category, offset, limit) => {
+  try {
+    const priceClause = price === 'relevent' ? '' :
+      price === 'low' ? 'ORDER BY price' : 'ORDER BY price DESC';
+    const categoryClause = category === 'all' ? '' : `WHERE category = ${category}`;
+    const search = await pool.query(
+      `
+      SELECT * FROM items
+      ${categoryClause}
+      ${priceClause}
+      LIMIT $2 OFFSET $1
+      `,
+      [offset, limit]
+    );
+    return search.rows;
+  } catch (err) {
+    return Promise.reject(err)
   }
 };
 
@@ -211,11 +236,11 @@ exports.deleteItem = async itemId => {
 
 exports.findCategoryByName = async name => {
   try {
-    const search= pool.query(
-      'SELECT * FROM categories WHERE category_name = $1 LIMIT 1',
+    const search = await pool.query(
+      'SELECT category_id FROM categories WHERE category_name = $1 LIMIT 1',
       [name]
     );
-    return search[0];
+    return search.rows[0];
   } catch (err) {
     return Promise.reject(err);
   }
