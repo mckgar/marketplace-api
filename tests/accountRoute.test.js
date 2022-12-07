@@ -10,6 +10,8 @@ const updateFirstName = jest.fn();
 const updateLastName = jest.fn();
 const updateEmail = jest.fn();
 const updatePassword = jest.fn();
+const findItemsBySeller = jest.fn();
+const deleteAccountById = jest.fn();
 
 const app = require('../app')({
   findAccountByUsername,
@@ -19,7 +21,9 @@ const app = require('../app')({
   updateFirstName,
   updateLastName,
   updateEmail,
-  updatePassword
+  updatePassword,
+  findItemsBySeller,
+  deleteAccountById,
 });
 
 const cred = require('../issueToken')(1);
@@ -919,5 +923,269 @@ describe('PUT /account/:username', () => {
   // Case where user does not exist is equivalent to having the wrong (or no) credentials
 });
 
-//GET /account
-//DELETE /account
+describe('GET /account/:username', () => {
+  describe('username is valid', () => {
+    test('Responds with 200 status code', async () => {
+      const data = [
+        { username: 'tester1' },
+        { username: 'tester2' },
+        { username: 'tester3' },
+      ];
+      for (const input of data) {
+        findAccountByUsername.mockReset();
+        findAccountByUsername.mockResolvedValue(input);
+        const response = await request(app)
+          .get(`/account/${input.username}`);
+        expect(response.statusCode).toBe(200);
+      }
+    });
+
+    test('Searches database for user by username', async () => {
+      const data = [
+        { username: 'tester1' },
+        { username: 'tester2' },
+        { username: 'tester3' },
+      ];
+      for (const input of data) {
+        findAccountByUsername.mockReset();
+        findAccountByUsername.mockResolvedValue(input);
+        await request(app)
+          .get(`/account/${input.username}`);
+        expect(findAccountByUsername.mock.calls.length).toBe(1);
+        expect(findAccountByUsername.mock.calls[0][0]).toBe(input.username);
+      }
+    });
+
+    test('Searches database for items posted by user', async () => {
+      const data = [
+        { username: 'tester1', account_id: 1 },
+        { username: 'tester2', account_id: 2 },
+        { username: 'tester3', account_id: 3 },
+      ];
+      for (const input of data) {
+        findAccountByUsername.mockReset();
+        findAccountByUsername.mockResolvedValue(input);
+        findItemsBySeller.mockReset();
+        await request(app)
+          .get(`/account/${input.username}`);
+        expect(findItemsBySeller.mock.calls.length).toBe(1);
+        expect(findItemsBySeller.mock.calls[0][0]).toBe(input.account_id);
+      }
+    });
+
+    test('Responds with json in content-type header', async () => {
+      const data = [
+        { username: 'tester1' },
+        { username: 'tester2' },
+        { username: 'tester3' },
+      ];
+      for (const input of data) {
+        const response = await request(app)
+          .get(`/account/${input.username}`);
+        expect(response.headers['content-type'])
+          .toEqual(expect.stringContaining('json'));
+      }
+    });
+
+    test('Responds with user in json object', async () => {
+      const data = [
+        { username: 'tester1' },
+        { username: 'tester2' },
+        { username: 'tester3' },
+      ];
+      for (const input of data) {
+        findAccountByUsername.mockReset();
+        findAccountByUsername.mockResolvedValue(input);
+        const response = await request(app)
+          .get(`/account/${input.username}`);
+        expect(response.body.user).toBeDefined();
+      }
+    });
+
+    test('User does not contain sensitive account information', async () => {
+      const data = [
+        { account_id: 1, username: 'tester1', hashedPassword: 'itsacecret1', first_name: 'name1', last_name: 'surname1', email: 'contact1@secret.com', created_on: Date.now() },
+        { account_id: 2, username: 'tester2', hashedPassword: 'itsacecret2', first_name: 'name2', last_name: 'surname2', email: 'contact2@secret.com', created_on: Date.now() },
+        { account_id: 3, username: 'tester3', hashedPassword: 'itsacecret3', first_name: 'name3', last_name: 'surname3', email: 'contact3@secret.com', created_on: Date.now() },
+      ];
+      for (const input of data) {
+        findAccountByUsername.mockReset();
+        findAccountByUsername.mockResolvedValue(input);
+        const response = await request(app)
+          .get(`/account/${input.username}`);
+        expect(response.body.user.account_id).not.toBeDefined();
+        expect(response.body.user.hashedPassword).not.toBeDefined();
+        expect(response.body.user.email).not.toBeDefined();
+      }
+    });
+
+    test('User contains desired account information', async () => {
+      const data = [
+        { account_id: 1, username: 'tester1', hashedPassword: 'itsacecret1', first_name: 'name1', last_name: 'surname1', email: 'contact1@secret.com', created_on: Date.now() },
+        { account_id: 2, username: 'tester2', hashedPassword: 'itsacecret2', first_name: 'name2', last_name: 'surname2', email: 'contact2@secret.com', created_on: Date.now() },
+        { account_id: 3, username: 'tester3', hashedPassword: 'itsacecret3', first_name: 'name3', last_name: 'surname3', email: 'contact3@secret.com', created_on: Date.now() },
+      ];
+      for (const input of data) {
+        findAccountByUsername.mockReset();
+        findAccountByUsername.mockResolvedValue(input);
+        const response = await request(app)
+          .get(`/account/${input.username}`);
+        expect(response.body.user.username).toBeDefined();
+        expect(response.body.user.first_name).toBeDefined();
+        expect(response.body.user.last_name).toBeDefined();
+        expect(response.body.user.created_on).toBeDefined();
+      }
+    });
+
+    test('User information matches database output', async () => {
+      const data = [
+        { account_id: 1, username: 'tester1', hashedPassword: 'itsacecret1', first_name: 'name1', last_name: 'surname1', email: 'contact1@secret.com', created_on: Date.now() },
+        { account_id: 2, username: 'tester2', hashedPassword: 'itsacecret2', first_name: 'name2', last_name: 'surname2', email: 'contact2@secret.com', created_on: Date.now() },
+        { account_id: 3, username: 'tester3', hashedPassword: 'itsacecret3', first_name: 'name3', last_name: 'surname3', email: 'contact3@secret.com', created_on: Date.now() },
+      ];
+      for (const input of data) {
+        findAccountByUsername.mockReset();
+        findAccountByUsername.mockResolvedValue(input);
+        const response = await request(app)
+          .get(`/account/${input.username}`);
+        expect(response.body.user.username).toBe(input.username);
+        expect(response.body.user.first_name).toBe(input.first_name);
+        expect(response.body.user.last_name).toBe(input.last_name);
+        expect(response.body.user.created_on).toBe(input.created_on);
+      }
+    });
+
+    test('Responds with items in json object', async () => {
+      const data = [
+        { username: 'tester1' },
+        { username: 'tester2' },
+        { username: 'tester3' },
+      ];
+      for (const input of data) {
+        findAccountByUsername.mockReset();
+        findAccountByUsername.mockResolvedValue(input);
+        findItemsBySeller.mockReset();
+        const response = await request(app)
+          .get(`/account/${input.username}`);
+        expect(response.body.items).toBeDefined();
+      }
+    });
+
+    test('Items is an array', async () => {
+      const data = [
+        { username: 'tester1' },
+        { username: 'tester2' },
+        { username: 'tester3' },
+      ];
+      for (const input of data) {
+        findAccountByUsername.mockReset();
+        findAccountByUsername.mockResolvedValue(input);
+        findItemsBySeller.mockReset();
+        const response = await request(app)
+          .get(`/account/${input.username}`);
+        expect(response.body.items).toBeInstanceOf(Array);
+      }
+    });
+
+    test('Items is response from database search', async () => {
+      const data = [
+        { username: 'tester1', items: [] },
+        { username: 'tester2', items: [{ id: 1 }] },
+        { username: 'tester3', items: [{ id: 2 }, { id: 3 }] },
+      ];
+      for (const input of data) {
+        findAccountByUsername.mockReset();
+        findAccountByUsername.mockResolvedValue(input);
+        findItemsBySeller.mockReset();
+        findItemsBySeller.mockResolvedValue(input.items);
+        const response = await request(app)
+          .get(`/account/${input.username}`);
+        expect(response.body.items).toEqual(input.items);
+      }
+    })
+  });
+
+  describe('Username is invalid', () => {
+    test('Responds with 404 status code', async () => {
+      findAccountByUsername.mockReset();
+      const response = await request(app)
+        .get(`/account/wrongname`);
+      expect(response.statusCode).toBe(404);
+    });
+  });
+});
+
+describe('DELETE /account/:username', () => {
+  describe('Given valid username', () => {
+    describe('Given valid credentials', () => {
+      test('Responds with 200 status code', async () => {
+        const data = [
+          { username: 'deleted1', account_id: 1 },
+          { username: 'deleted2', account_id: 2 },
+          { username: 'deleted3', account_id: 3 },
+        ];
+        for (const input of data) {
+          findAccountById.mockResolvedValue(input);
+          const response = await request(app)
+            .delete(`/account/${input.username}`)
+            .set('Authorization', `Bearer ${cred}`);
+          expect(response.statusCode).toBe(200);
+        }
+      });
+
+      test('Deletes user from database', async () => {
+        const data = [
+          { username: 'deleted1', account_id: 1 },
+          { username: 'deleted2', account_id: 2 },
+          { username: 'deleted3', account_id: 3 },
+        ];
+        for (const input of data) {
+          findAccountById.mockResolvedValue(input);
+          deleteAccountById.mockReset();
+          await request(app)
+            .delete(`/account/${input.username}`)
+            .set('Authorization', `Bearer ${cred}`);
+          expect(deleteAccountById.mock.calls.length).toBe(1);
+          expect(deleteAccountById.mock.calls[0][0]).toBe(input.account_id);
+        }
+      });
+    });
+
+    describe('Given invalid credentials', () => {
+      test('Responds with 403 status code', async () => {
+        const data = [
+          { username: 'deleted1', account_id: 1 },
+          { username: 'deleted2', account_id: 2 },
+          { username: 'deleted3', account_id: 3 },
+        ];
+        for (const input of data) {
+          findAccountById.mockResolvedValue({
+            username: 'badname'
+          });
+          const response = await request(app)
+            .delete(`/account/${input.username}`)
+            .set('Authorization', `Bearer ${cred}`);
+          expect(response.statusCode).toBe(403);
+        }
+      });
+    });
+
+    describe('Given no credentials', () => {
+      test('Reponds with 401 status code', async () => {
+        const data = [
+          { username: 'deleted1', account_id: 1 },
+          { username: 'deleted2', account_id: 2 },
+          { username: 'deleted3', account_id: 3 },
+        ];
+        for (const input of data) {
+          findAccountById.mockResolvedValue(null);
+          const response = await request(app)
+            .delete(`/account/${input.username}`);
+          expect(response.statusCode).toBe(401);
+        }
+      });
+    });
+  });
+
+  // Invalid username cases equivalent to invalid (or no) credentials
+});

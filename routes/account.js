@@ -149,6 +149,53 @@ const accountRoute = database => {
     }
   ]);
 
+  router.get('/:username', [
+    param('username')
+      .trim()
+      .escape(),
+    async (req, res, next) => {
+      try {
+        const user = await database.findAccountByUsername(req.params.username);
+        if (user) {
+          const items = await database.findItemsBySeller(user.account_id);
+          res.status(200).json({
+            user: {
+              username: user.username,
+              first_name: user.first_name,
+              last_name: user.last_name,
+              created_on: user.created_on,
+            },
+            items: items || []
+          });
+          return;
+        }
+        next();
+      } catch (err) {
+        next(err);
+      }
+    }
+  ]);
+
+  router.delete('/:username', [
+    passport.authenticate('jwt', { session: false }),
+    param('username')
+      .trim()
+      .escape(),
+    async (req, res, next) => {
+      if (req.user.username !== req.params.username) {
+        res.sendStatus(403);
+        return;
+      }
+      try {
+        await database.deleteAccountById(req.user.account_id);
+        res.sendStatus(200);
+        return;
+      } catch (err) {
+        next(err)
+      }
+    }
+  ]);
+
   return router;
 }
 
