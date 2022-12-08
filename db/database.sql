@@ -1,3 +1,9 @@
+/* 
+ * To set up, first use create database query
+ * Next switch into marketplace
+ * Finally copy and paste then run all remaining queries
+ */
+
 CREATE DATABASE marketplace;
 
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
@@ -40,6 +46,11 @@ CREATE TABLE seller_ratings (
     REFERENCES accounts (account_id)
 );
 
+CREATE TABLE categories (
+  category_id uuid PRIMARY KEY DEFAULT UUID_GENERATE_V4(),
+  category_name VARCHAR(255) UNIQUE NOT NULL
+);
+
 CREATE TABLE items (
   item_id uuid PRIMARY KEY DEFAULT UUID_GENERATE_V4(),
   item_name VARCHAR(255) NOT NULL,
@@ -53,11 +64,6 @@ CREATE TABLE items (
     REFERENCES accounts (account_id),
   FOREIGN KEY (category)
     REFERENCES categories (category_id)
-);
-
-CREATE TABLE categories (
-  category_id uuid PRIMARY KEY DEFAULT UUID_GENERATE_V4(),
-  category_name VARCHAR(255) UNIQUE NOT NULL
 );
 
 CREATE TABLE carts (
