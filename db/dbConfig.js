@@ -108,6 +108,19 @@ exports.updatePassword = async (accountId, newHashedPassword) => {
   }
 };
 
+// Delete account
+
+exports.deleteAccountById = async accountId => {
+  try {
+    await pool.query(
+      'DELETE FROM accounts WHERE account_id = $1',
+      [accountId]
+    );
+  } catch (err) {
+    Promise.reject(err);
+  }
+}
+
 // Create item
 
 exports.saveItem = async (sellerId, name, description, price, quantity, category) => {
@@ -144,6 +157,21 @@ exports.retrieveItems = async (price, category, offset, limit) => {
     return search.rows;
   } catch (err) {
     return Promise.reject(err)
+  }
+};
+
+exports.findItemsBySeller = async sellerId => {
+  try {
+    const search = await pool.query(
+      `
+      SELECT * FROM items
+      WHERE seller = $1
+      `,
+      [sellerId]
+    );
+    return search.rows;
+  } catch (err) {
+    return Promise.reject(err);
   }
 };
 
@@ -237,7 +265,7 @@ exports.deleteItem = async itemId => {
 exports.findCategoryByName = async name => {
   try {
     const search = await pool.query(
-      'SELECT category_id FROM categories WHERE category_name = $1 LIMIT 1',
+      'SELECT * FROM categories WHERE category_name = $1 LIMIT 1',
       [name]
     );
     return search.rows[0];
