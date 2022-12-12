@@ -14,13 +14,34 @@ const pool = new Pool(
 
 exports.createAccount = async (username, hashedPassword, email) => {
   try {
-    const newUser = await pool.query(
-      'INSERT INTO accounts(username, hashedPassword, email) VALUES($1, $2, $3)',
+    // Create account
+    await pool.query(
+      `
+      INSERT INTO accounts(username, hashedPassword, email) 
+      VALUES($1, $2, $3)
+      `,
       [username, hashedPassword, email]
     );
-    return newUser.account_id;
+    const newUser = await pool.query(
+      `
+      SELECT account_id FROM accounts
+      WHERE username = $1
+      LIMIT 1
+      `,
+      [username]
+    );
+    console.log(newUser.rows[0].account_id);
+    // Create cart
+    await pool.query(
+      `
+      INSERT INTO carts(cart_owner)
+      VALUES($1)
+      `,
+      [newUser.rows[0].account_id]
+    )
+    return newUser.rows[0].account_id;
   } catch (err) {
-    return err;
+    return Promise.reject(err);
   }
 };
 
@@ -112,12 +133,40 @@ exports.updatePassword = async (accountId, newHashedPassword) => {
 
 exports.deleteAccountById = async accountId => {
   try {
+    const cartId = await pool.query(
+      `
+      SELECT cart_id FROM carts
+      WHERE cart_owner = $1
+      `,
+      [accountId]
+    );
+    await pool.query(
+      `
+      DELETE FROM cart_items
+      WHERE cart = $1
+      `,
+      [cartId.rows[0].cart_id]
+    );
+    await pool.query(
+      `
+      DELETE FROM carts
+      WHERE cart_owner = $1
+      `,
+      [accountId]
+    );
+    await pool.query(
+      `
+      DELETE FROM items
+      WHERE seller = $1
+      `,
+      [accountId]
+    );
     await pool.query(
       'DELETE FROM accounts WHERE account_id = $1',
       [accountId]
     );
   } catch (err) {
-    Promise.reject(err);
+    return Promise.reject(err);
   }
 }
 
@@ -273,3 +322,55 @@ exports.findCategoryByName = async name => {
     return Promise.reject(err);
   }
 };
+
+// Retrieve cart
+
+exports.findCartByUser = async accountId => {
+  try {
+    const cart = await pool.query(
+      `
+      SELECT * FROM carts
+      LEFT JOIN cart_items ON carts.cart_id = cart_items.cart
+      WHERE cart_owner = $1
+      `,
+      [accountId]
+    );
+    return cart.rows;
+  } catch (err) {
+    return Promise.reject(err);
+  }
+}
+
+// Modify cart
+
+exports.addItemToCart = async (accountId, itemId, quantity) => {
+  try {
+    const cartId = await pool.query(
+      `
+      SELECT cart_id FROM carts
+      WHERE cart_owner = $1
+      LIMIT 1
+      `,
+      [accountId]
+    );
+    console.log(cartId);
+    const maxQuantity = await pool.query(
+      `
+      SELECT quantity FROM items
+      WHERE item_id = $1
+      LIMIT 1
+      `,
+      [itemId]
+    ).rows[0];
+    const quantityToUse = Math.min(maxQuantity, quantity)
+    await pool.query(
+      `
+      INSERT INTO cart_items(cart, item, quantity, date_placed)
+      VALUES($1, $2, $3, NOW())
+      `,
+      [cartId, itemId, quantityToUse]
+    );
+  } catch (err) {
+    return Promise.reject(err);
+  }
+}
