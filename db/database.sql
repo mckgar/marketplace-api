@@ -4,9 +4,13 @@
  * Finally copy and paste then run all remaining queries
  */
 
+ /* Create database */
+
 CREATE DATABASE marketplace;
 
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+
+/* Create Tables */
 
 CREATE TABLE accounts (
   account_id uuid PRIMARY KEY DEFAULT UUID_GENERATE_V4(),
@@ -101,3 +105,16 @@ CREATE TABLE order_items (
   FOREIGN KEY (item_id)
     REFERENCES items (item_id)
 );
+
+/* Populate required information */
+
+INSERT INTO categories(category_name) 
+VALUES 
+  ('clothing'),
+  ('books'),
+  ('toys'),
+  ('games'),
+  ('accessories'),
+  ('decorations'),
+  ('office');
+
