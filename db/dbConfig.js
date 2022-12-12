@@ -30,7 +30,6 @@ exports.createAccount = async (username, hashedPassword, email) => {
       `,
       [username]
     );
-    console.log(newUser.rows[0].account_id);
     // Create cart
     await pool.query(
       `
@@ -50,7 +49,11 @@ exports.createAccount = async (username, hashedPassword, email) => {
 exports.findAccountByUsername = async username => {
   try {
     const user = await pool.query(
-      'SELECT * FROM accounts WHERE username = $1 LIMIT 1',
+      `
+      SELECT * FROM accounts
+      WHERE username = $1
+      LIMIT 1
+      `,
       [username]
     );
     return user.rows[0];
@@ -62,7 +65,11 @@ exports.findAccountByUsername = async username => {
 exports.findAccountByEmail = async email => {
   try {
     const user = await pool.query(
-      'SELECT * FROM accounts WHERE email = $1 LIMIT 1',
+      `
+      SELECT * FROM accounts
+      WHERE email = $1
+      LIMIT 1
+      `,
       [email]
     );
     return user.rows[0];
@@ -74,7 +81,11 @@ exports.findAccountByEmail = async email => {
 exports.findAccountById = async accountId => {
   try {
     const user = await pool.query(
-      'SELECT * FROM accounts WHERE account_id = $1 LIMIT 1',
+      `
+      SELECT * FROM accounts
+      WHERE account_id = $1
+      LIMIT 1
+      `,
       [accountId]
     );
     return user.rows[0];
@@ -88,7 +99,11 @@ exports.findAccountById = async accountId => {
 exports.updateFirstName = async (accountId, firstName) => {
   try {
     await pool.query(
-      'UPDATE accounts SET first_name = $1 WHERE account_id = $2',
+      `
+      UPDATE accounts
+      SET first_name = $1
+      WHERE account_id = $2
+      `,
       [firstName, accountId]
     );
   } catch (err) {
@@ -99,7 +114,11 @@ exports.updateFirstName = async (accountId, firstName) => {
 exports.updateLastName = async (accountId, lastName) => {
   try {
     await pool.query(
-      'UPDATE accounts SET last_name = $1 WHERE account_id = $2',
+      `
+      UPDATE accounts
+      SET last_name = $1
+      WHERE account_id = $2
+      `,
       [lastName, accountId]
     );
   } catch (err) {
@@ -110,7 +129,11 @@ exports.updateLastName = async (accountId, lastName) => {
 exports.updateEmail = async (accountId, newEmail) => {
   try {
     await pool.query(
-      'UPDATE accounts SET email = $1 WHERE account_id = $2',
+      `
+      UPDATE accounts
+      SET email = $1
+      WHERE account_id = $2
+      `,
       [newEmail, accountId]
     );
   } catch (err) {
@@ -121,7 +144,11 @@ exports.updateEmail = async (accountId, newEmail) => {
 exports.updatePassword = async (accountId, newHashedPassword) => {
   try {
     await pool.query(
-      'UPDATE accounts SET hashedPassword = $1 WHERE account_id = $2',
+      `
+      UPDATE accounts
+      SET hashedPassword = $1
+      WHERE account_id = $2
+      `,
       [newHashedPassword, accountId]
     );
   } catch (err) {
@@ -162,7 +189,10 @@ exports.deleteAccountById = async accountId => {
       [accountId]
     );
     await pool.query(
-      'DELETE FROM accounts WHERE account_id = $1',
+      `
+      DELETE FROM accounts
+      WHERE account_id = $1
+      `,
       [accountId]
     );
   } catch (err) {
@@ -229,7 +259,11 @@ exports.findItemsBySeller = async sellerId => {
 exports.findItemById = async (itemId) => {
   try {
     const search = await pool.query(
-      'SELECT * FROM items WHERE item_id = $1 LIMIT 1',
+      `
+      SELECT * FROM items
+      WHERE item_id = $1
+      LIMIT 1
+      `,
       [itemId]
     );
     const item = search.rows[0];
@@ -244,7 +278,11 @@ exports.findItemById = async (itemId) => {
 exports.updateItemName = async (itemId, name) => {
   try {
     await pool.query(
-      'UPDATE items SET item_name = $1 WHERE item_id = $2',
+      `
+      UPDATE items
+      SET item_name = $1
+      WHERE item_id = $2
+      `,
       [name, itemId]
     );
   } catch (err) {
@@ -255,7 +293,11 @@ exports.updateItemName = async (itemId, name) => {
 exports.updateItemDescription = async (itemId, description) => {
   try {
     await pool.query(
-      'UPDATE items SET item_description = $1 WHERE item_id = $2',
+      `
+      UPDATE items
+      SET item_description = $1
+      WHERE item_id = $2
+      `,
       [description, itemId]
     );
   } catch (err) {
@@ -266,7 +308,11 @@ exports.updateItemDescription = async (itemId, description) => {
 exports.updateItemPrice = async (itemId, price) => {
   try {
     await pool.query(
-      'UPDATE items SET price = $1 WHERE item_id = $2',
+      `
+      UPDATE items
+      SET price = $1
+      WHERE item_id = $2
+      `,
       [price, itemId]
     );
   } catch (err) {
@@ -277,7 +323,11 @@ exports.updateItemPrice = async (itemId, price) => {
 exports.updateItemQuantity = async (itemId, quantity) => {
   try {
     await pool.query(
-      'UPDATE items SET quantity = $1 WHERE item_id = $2',
+      `
+      UPDATE items
+      SET quantity = $1
+      WHERE item_id = $2
+      `,
       [quantity, itemId]
     );
   } catch (err) {
@@ -288,7 +338,11 @@ exports.updateItemQuantity = async (itemId, quantity) => {
 exports.updateItemCategory = async (itemId, category) => {
   try {
     await pool.query(
-      'UPDATE items SET category = $1 WHERE item_id = $2',
+      `
+      UPDATE items
+      SET category = $1
+      WHERE item_id = $2
+      `,
       [category, itemId]
     );
   } catch (err) {
@@ -301,7 +355,10 @@ exports.updateItemCategory = async (itemId, category) => {
 exports.deleteItem = async itemId => {
   try {
     await pool.query(
-      'DELETE FROM items WHERE item_id = $1',
+      `
+      DELETE FROM items
+      WHERE item_id = $1
+      `,
       [itemId]
     )
   } catch (err) {
@@ -314,7 +371,11 @@ exports.deleteItem = async itemId => {
 exports.findCategoryByName = async name => {
   try {
     const search = await pool.query(
-      'SELECT * FROM categories WHERE category_name = $1 LIMIT 1',
+      `
+      SELECT * FROM categories
+      WHERE category_name = $1
+      LIMIT 1
+      `,
       [name]
     );
     return search.rows[0];
@@ -353,7 +414,6 @@ exports.addItemToCart = async (accountId, itemId, quantity) => {
       `,
       [accountId]
     );
-    console.log(cartId);
     const maxQuantity = await pool.query(
       `
       SELECT quantity FROM items
@@ -361,8 +421,8 @@ exports.addItemToCart = async (accountId, itemId, quantity) => {
       LIMIT 1
       `,
       [itemId]
-    ).rows[0];
-    const quantityToUse = Math.min(maxQuantity, quantity)
+    );
+    const quantityToUse = Math.min(maxQuantity.rows[0].quantity, quantity)
     await pool.query(
       `
       INSERT INTO cart_items(cart, item, quantity, date_placed)
