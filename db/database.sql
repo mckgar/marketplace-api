@@ -90,7 +90,7 @@ CREATE TABLE cart_items (
 
 CREATE TABLE orders (
   order_id uuid PRIMARY KEY DEFAULT UUID_GENERATE_V4(),
-  purchased_by uuid NOT NULL,
+  purchased_by VARCHAR(255) NOT NULL,
   amount_total decimal NOT NULL,
   time_of_purchase TIMESTAMP NOT NULL,
   FOREIGN KEY (purchased_by)
