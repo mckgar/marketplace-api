@@ -1,6 +1,6 @@
 const express = require('express');
 
-const routes = (database) => {
+const routes = database => {
   const router = express.Router();
   router.get('/', (req, res, next) => res.send('Under construction'));
 
@@ -9,6 +9,7 @@ const routes = (database) => {
 
   router.use('/item', require('./item')(database));
   router.use('/cart', require('./cart')(database));
+  router.use('/orders', require('./orders')(database));
 
   return router;
 };
