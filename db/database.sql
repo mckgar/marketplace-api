@@ -100,6 +100,8 @@ CREATE TABLE orders (
 CREATE TABLE order_items (
   order_id uuid NOT NULL,
   item_id uuid NOT NULL,
+  quantity INTEGER NOT NULL,
+  total DECIMAL NOT NULL,
   FOREIGN KEY (order_id)
     REFERENCES orders (order_id),
   FOREIGN KEY (item_id)
