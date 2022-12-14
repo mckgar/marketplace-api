@@ -20,9 +20,9 @@ describe('POST /orders', () => {
   describe('Given valid email', () => {
     describe('Given valid cart', () => {
       const data = [
-        [mockedId],
-        [mockedId2, mockedId3],
-        [mockedId, mockedId2, mockedId3],
+        [{ item_id: mockedId, quantity: 1 }],
+        [{ item_id: mockedId2, quantity: 2 }, { item_id: mockedId3, quantity: 6 }],
+        [{ item_id: mockedId, quantity: 4 }, { item_id: mockedId2, quantity: 3 }, { item_id: mockedId3, quantity: 12 }],
       ];
       findItemById.mockReset();
       findItemById.mockResolvedValue({ name: 'item' });
@@ -57,7 +57,19 @@ describe('POST /orders', () => {
         [],
         ['a'],
         [12],
-        [mockedId]
+        [mockedId],
+        [{}],
+        [{ item_id: null }],
+        [{ item_id: 'a' }],
+        [{ item_id: 1 }],
+        [{ item_id: mockedId }],
+        [{ item_id: null, quantity: 1 }],
+        [{ item_id: 'a', quantity: 1 }],
+        [{ item_id: 1, quantity: 1 }],
+        [{ item_id: mockedId, quantity: null }],
+        [{ item_id: mockedId, quantity: 'a' }],
+        [{ item_id: mockedId, quantity: -12 }],
+        [{ item_id: mockedId, quantity: mockedId }],
       ];
 
       test('Responds with 400 status code', async () => {
@@ -123,7 +135,7 @@ describe('POST /orders', () => {
       for (const email of data) {
         const response = await request(app)
           .post('/orders')
-          .send({ email: email, cart: [mockedId] });
+          .send({ email: email, cart: [{ item_id: mockedId, quantity: 1 }] });
         expect(response.headers['content-type'])
           .toEqual(expect.stringContaining('json'));
       }

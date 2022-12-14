@@ -14,7 +14,7 @@ const ordersRoute = database => {
       .bail()
       .toArray()
       .isLength({ min: 1 }),
-    body('cart.*')
+    body('cart.*.item_id')
       .trim()
       .escape()
       .isUUID()
@@ -30,6 +30,12 @@ const ordersRoute = database => {
           return Promise.reject('Oops, something went wrong');
         }
       }),
+    body('cart.*.quantity')
+      .trim()
+      .escape()
+      .isInt({ min: 1 })
+      .bail()
+      .toInt(),
     async (req, res, next) => {
       const errors = validationResult(req);
       if (!errors.isEmpty()) {
