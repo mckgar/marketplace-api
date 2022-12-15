@@ -1,11 +1,15 @@
 require('dotenv').config();
 const express = require('express');
+const cors = require('cors');
 const logger = require('morgan');
 const createError = require('http-errors');
 
 const createApp = (database) => {
   const app = express();
 
+  app.use(cors({
+    origin: process.env.FRONTEND_URL
+  }));
   app.use(logger('dev'));
   app.use(express.json());
   app.use(express.urlencoded({ extended: false }));
